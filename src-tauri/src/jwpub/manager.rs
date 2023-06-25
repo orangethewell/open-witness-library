@@ -159,7 +159,6 @@ impl PubCatalog {
     /// `jwpub:///lang/category/pub`. 
     pub fn get_summary_from(&self, lang: String, category: String, pub_symbol: String) -> Result<Vec<Chapter>, ()> {
         let pub_directory = self.normalize_request_directory(&lang, &category, &pub_symbol); 
-        println!("{:#?}", pub_directory);
         let manifest = self.populate_manifest(&pub_directory).unwrap();
         
         if let Ok(connection) = sqlite::open(&pub_directory.join(format!("content/{}", manifest["publication"]["fileName"].as_str().unwrap().to_owned()))){
@@ -190,7 +189,6 @@ impl PubCatalog {
     /// Ex: jwpub://T/bk/lff_T?contentId=4
     pub fn get_chapter_content(&mut self, lang: String, category: String, pub_symbol: String, chapter_id: i64) -> String {
         let pub_directory = self.normalize_request_directory(&lang, &category, &pub_symbol);
-        println!("{:#?}", pub_directory);
         let manifest = self.populate_manifest(&pub_directory).unwrap();
 
         if let Ok(connection) = sqlite::open(&pub_directory.join(format!("content/{}", manifest["publication"]["fileName"].as_str().unwrap().to_owned()))) {
@@ -246,6 +244,9 @@ impl PubCatalog {
         self.media_location = self.normalize_request_directory(lang, category, pub_symbol).join("content");
     }
     
+    pub fn set_catalog_local<T: Into<PathBuf>>(&mut self, local: T){
+        self.local = local.into();
+    }
 
     fn normalize_request_directory(&self, lang: &str, category: &str, pub_symbol: &str) -> PathBuf {
         self.local.join(format!("publications/{lang}/{category}/{pub_symbol}"))

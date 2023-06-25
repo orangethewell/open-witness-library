@@ -84,6 +84,15 @@ fn pubcatalog_set_media_location<'r>(manager: State<'r, PubManager>, lang: Strin
 
   manager.set_media_location(&lang, &category, &pub_symbol);
 }
+
+#[tauri::command]
+fn pubcatalog_init_catalog<R: tauri::Runtime, 'r>(app: tauri::AppHandle<R> ,manager: State<'r, PubManager>) {
+  let mut manager = tauri::async_runtime::block_on(manager.catalog.lock());
+  println!("COMMAND REQUEST: Initializing Catalog...");
+  let path = app.path().local_data_dir().unwrap().join("open-witness-library");
+  println!("COMMAND REQUEST: Catalog initialized! | At: {:#?}", path);
+  manager.set_catalog_local(path);
+}
 // ----------------------------------------------------
 
 
@@ -97,10 +106,11 @@ pub fn run() {
             pubcatalog_get_list_from,
             pubcatalog_get_summary_from,
             pubcatalog_get_chapter_content,
-            pubcatalog_set_media_location
+            pubcatalog_set_media_location,
+            pubcatalog_init_catalog
         ])
         .manage(PubManager { catalog: Mutex::new(jwpub::PubCatalog::new(
-            "/home/orangethewell/.local/share/com.orangethewell.owl"
+                "/usr/share/open-witness-library"
                )
             )
         })

@@ -1,4 +1,5 @@
 use wasm_bindgen::prelude::*; 
+use rust_embed::RustEmbed;
 
 #[wasm_bindgen]
 extern "C" {
@@ -21,6 +22,9 @@ extern "C" {
     pub fn convert_file_src(file: &str, protocol: Option<&str>) -> String;
 } 
 
+#[derive(RustEmbed)]
+#[folder = "i18n"]
+pub struct Localizations;
 
 pub mod pub_utils {
     use serde::{Serialize, Deserialize};
@@ -65,6 +69,8 @@ pub mod TauriWrappers {
         invoke_with_args,
         log
     };
+
+    use super::invoke_without_args;
     
 
     #[derive(Serialize, Deserialize)]
@@ -128,6 +134,10 @@ pub mod TauriWrappers {
     pub fn set_media_location(lang: &str, category: &str, pub_symbol: &str){
         let args = MediaArgs{lang: lang.to_owned(), category: category.to_owned(), pubSymbol: pub_symbol.to_owned()};
         invoke_with_args("pubcatalog_set_media_location", to_value(&args).unwrap());
+    }
+
+    pub fn init_catalog() {
+        invoke_without_args("pubcatalog_init_catalog");
     }
 
     pub async fn get_chapter_content(lang: &str, category: &str, pub_symbol: &str, chapter_id: i32) -> String {

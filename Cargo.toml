@@ -15,6 +15,10 @@ web-sys = "0.3"
 js-sys = "0.3"
 gloo = "0.8.1"
 gloo-timers = "0.2.6"
+i18n-embed = { version = "0.13.9", features = ["fluent-system", "web-sys-requester"] }
+i18n-embed-fl = "0.6.7"
+rust-embed = { version = "6.7.0", features = ["debug-embed"]}
+unic-langid = "0.9.1"
 
 [workspace]
 members = ["src-tauri"]

@@ -1,22 +1,26 @@
-use std::path::PathBuf;
-
-use serde::{Serialize, Deserialize};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use serde_wasm_bindgen::{to_value, from_value};
-use yew_router::prelude::*;
-use crate::views::Route;
-
 use crate::components::publication::PubCatalog;
 use crate::utils::{
     pub_utils::Publication,
     TauriWrappers::get_list_from_category,
     log,
+    Localizations
 };
 
+use i18n_embed::{
+    WebLanguageRequester, // TODO: Implement Tauri Language Requester
+    fluent::{fluent_language_loader, FluentLanguageLoader},
+    LanguageLoader,
+};
+use i18n_embed_fl::fl;
 
 #[function_component(Home)]
 pub fn home() -> Html {
+    let language_loader: FluentLanguageLoader = fluent_language_loader!();
+    
+    language_loader.load_languages(&Localizations, &[language_loader.fallback_language()]);
+
     let publications = use_state(|| {
         let pub_list: Vec<Publication> = vec![];
         pub_list
@@ -34,7 +38,7 @@ pub fn home() -> Html {
 
     html! {
         <>
-            <button {onclick}>{ "Atualizar lista" }</button>
+            <button {onclick}>{ fl!(language_loader, "update-list") }</button>
             <PubCatalog publications={(*publications).clone()}/>
         </>
     }

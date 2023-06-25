@@ -60,7 +60,7 @@ impl PubCatalog {
 
             Callback::from(move |_| {
                 let mut pub_symbol = publi.symbol.to_owned();
-                pub_symbol.push_str("_T"); // TODO: remove this plz;
+                pub_symbol.push_str(&format!("_{}", publi.language)); // TODO: remove this plz;
                 set_media_location(&publi.language, &publi.category, &pub_symbol);
             
                 navigator.push(&Route::SummaryView{lang: publi.language.clone(), categ: publi.category.clone(), pub_symbol: pub_symbol.clone()});

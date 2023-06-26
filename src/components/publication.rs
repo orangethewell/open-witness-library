@@ -1,12 +1,8 @@
-use std::{rc::Rc, borrow::BorrowMut, cell::RefCell, vec};
-
 use crate::utils::{
     pub_utils::{Publication, Chapter},
-    TauriWrappers::{get_list_from_category, set_media_location, get_summary_from},
-    log,
-    convert_file_src, invoke_with_args
+    TauriWrappers::set_media_location,
+    convert_file_src
 };
-use wasm_bindgen_futures::spawn_local;
 use yew::{prelude::*, virtual_dom::AttrValue};
 use yew_router::prelude::*;
 use crate::views::Route;
@@ -124,7 +120,7 @@ impl PubSummary {
             let props = props.clone();
             let chapter = chapter.clone();
             Callback::from(move |_| {
-                let mut pub_symbol = (&props).pub_symbol.clone().to_string();
+                let pub_symbol = (&props).pub_symbol.clone().to_string();
 
                 navigator.push(&Route::PubView{lang: (&props).lang.clone().to_string(), categ: (&props).category.clone().to_string(), pub_symbol: pub_symbol.clone().to_string(), chapter_id: chapter.id.clone() as i32});
             })

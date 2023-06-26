@@ -2,10 +2,8 @@ use std::rc::Rc;
 use web_sys::{Element, Node};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use yew_router::prelude::*;
 use gloo::utils::document;
 use crate::components::publication::PubSummary;
-use crate::views::Route;
 use crate::utils::{TauriWrappers::{get_chapter_content, get_summary_from}, log, pub_utils::Chapter};
 
 #[derive(Properties, PartialEq)]
@@ -28,12 +26,9 @@ pub struct PubReader {
     content: Rc<String>,
 }
 
-
-
 /// reducer's Action
 enum ReaderAction {
     Fill{data: String},
-    Clean,
 }
 
 /// reducer's State
@@ -56,7 +51,6 @@ impl Reducible for ReaderState {
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let next_ctr = match action {
             ReaderAction::Fill { data } => data.clone(),
-            ReaderAction::Clean => "Data was cleaned.".to_owned(),
         };
 
         Self { data: next_ctr }.into()

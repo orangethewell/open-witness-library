@@ -4,12 +4,10 @@ use crate::components::publication::PubCatalog;
 use crate::utils::{
     pub_utils::Publication,
     TauriWrappers::get_list_from_category,
-    log,
     Localizations
 };
 
-use i18n_embed::{
-    WebLanguageRequester, // TODO: Implement Tauri Language Requester
+use i18n_embed::{ // TODO: Implement Tauri Language Requester
     fluent::{fluent_language_loader, FluentLanguageLoader},
     LanguageLoader,
 };

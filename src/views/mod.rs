@@ -1,3 +1,5 @@
+#![allow(unused_must_use)]
+
 pub mod home;
 pub mod reader;
 pub mod utils {

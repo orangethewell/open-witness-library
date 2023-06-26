@@ -136,10 +136,6 @@ pub mod TauriWrappers {
         invoke_with_args("pubcatalog_set_media_location", to_value(&args).unwrap());
     }
 
-    pub fn init_catalog() {
-        invoke_without_args("pubcatalog_init_catalog");
-    }
-
     pub async fn get_chapter_content(lang: &str, category: &str, pub_symbol: &str, chapter_id: i32) -> String {
         let args = ChapterArgs{lang: lang.to_owned(), category: category.to_owned(), pubSymbol: pub_symbol.to_owned(), contentId: chapter_id.into()};
         let content = wasm_bindgen_futures::JsFuture::from(

@@ -1,14 +1,13 @@
+#![allow(unused_must_use)]
+
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
-
-use jwpub::manager;
 use serde::{Serialize, Deserialize};
 use tauri::Manager;
 use tauri::State;
-use tauri::http::{HttpRange, ResponseBuilder, Response};
+use tauri::http::{ResponseBuilder};
 use url::Url;
-use tauri::async_runtime::{Mutex, spawn};
+use tauri::async_runtime::{Mutex};
 
 mod jwpub;
 
@@ -85,14 +84,6 @@ fn pubcatalog_set_media_location<'r>(manager: State<'r, PubManager>, lang: Strin
   manager.set_media_location(&lang, &category, &pub_symbol);
 }
 
-#[tauri::command]
-fn pubcatalog_init_catalog<R: tauri::Runtime, 'r>(app: tauri::AppHandle<R> ,manager: State<'r, PubManager>) {
-  let mut manager = tauri::async_runtime::block_on(manager.catalog.lock());
-  println!("COMMAND REQUEST: Initializing Catalog...");
-  let path = app.path().local_data_dir().unwrap().join("open-witness-library");
-  println!("COMMAND REQUEST: Catalog initialized! | At: {:#?}", path);
-  manager.set_catalog_local(path);
-}
 // ----------------------------------------------------
 
 
@@ -106,13 +97,19 @@ pub fn run() {
             pubcatalog_get_list_from,
             pubcatalog_get_summary_from,
             pubcatalog_get_chapter_content,
-            pubcatalog_set_media_location,
-            pubcatalog_init_catalog
+            pubcatalog_set_media_location
         ])
-        .manage(PubManager { catalog: Mutex::new(jwpub::PubCatalog::new(
-                "/usr/share/open-witness-library"
-               )
-            )
+        .setup(|app| {
+            let main_window = app.get_window("main").unwrap();
+            main_window.set_title("Open Witness Library");
+            app.manage(PubManager { 
+                catalog: Mutex::new(
+                    jwpub::PubCatalog::new(
+                        app.path().local_data_dir().unwrap()
+                        .join("open-witness-library")))
+                    }
+                );
+            Ok(())
         })
         .register_uri_scheme_protocol("jwpub-media", |app, req| {
             println!("URI Request");

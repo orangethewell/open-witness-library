@@ -1,10 +1,7 @@
-use serde_wasm_bindgen::to_value;
 use yew::prelude::*;
-use crate::{views::{Home, PubView, Route, reader::SummaryView}, utils::TauriWrappers::init_catalog};
+use crate::views::{Home, PubView, Route, reader::SummaryView};
 
 use yew_router::prelude::*;
-
-// TODO: Comere 
 
 fn switch(routes: Route) -> Html {
     match routes {
@@ -17,7 +14,6 @@ fn switch(routes: Route) -> Html {
 
 #[function_component(Main)]
 pub fn app() -> Html {
-    init_catalog();
     html! {
         <BrowserRouter>
             <Switch<Route> render={switch}/>

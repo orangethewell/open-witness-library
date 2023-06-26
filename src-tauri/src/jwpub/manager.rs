@@ -1,11 +1,8 @@
 #![allow(dead_code)]
 
-use hex::ToHex;
 use inflate::inflate_bytes_zlib;
-use serde::{Serialize, Deserialize};
 use serde_json::Value;
 use std::{path::{PathBuf, Path}, fs, io::{self, Read}, collections::HashMap};
-use fs_extra::dir::{move_dir, CopyOptions};
 use super::extension::{Publication, Chapter}; 
 use sqlite;
 
@@ -166,7 +163,7 @@ impl PubCatalog {
            let mut summary: Vec<Chapter> = vec![];
 
            while let Some(Ok(row)) = cursor.next() {
-               let mut new_chapter = Chapter {
+               let new_chapter = Chapter {
                    id: row.get::<i64, _>(0),
                    class: 0,
                    section: row.get::<i64, _>(2),
@@ -243,17 +240,13 @@ impl PubCatalog {
     pub fn set_media_location(&mut self, lang: &str, category: &str, pub_symbol: &str) {
         self.media_location = self.normalize_request_directory(lang, category, pub_symbol).join("content");
     }
-    
-    pub fn set_catalog_local<T: Into<PathBuf>>(&mut self, local: T){
-        self.local = local.into();
-    }
 
     fn normalize_request_directory(&self, lang: &str, category: &str, pub_symbol: &str) -> PathBuf {
         self.local.join(format!("publications/{lang}/{category}/{pub_symbol}"))
     } 
 
     fn populate_manifest(&self, pub_directory: &PathBuf) -> Result<Value, ()> {
-        let mut manifest_path = pub_directory.join("manifest.json");
+        let manifest_path = pub_directory.join("manifest.json");
         if let Ok(mut manifest_file) = fs::File::open(manifest_path) {
             let mut manifest_data = String::new();
             manifest_file.read_to_string(&mut manifest_data).unwrap();

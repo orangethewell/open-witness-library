@@ -1,0 +1,275 @@
+.north_center {
+    position: relative;
+    margin: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.south_center img {
+    position: relative;
+    margin: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.contextTtl {
+    margin: 10px 28px;
+    color: rgb(124, 124, 124);
+}
+
+#p2 {
+    margin: 10px 28px;
+}
+
+header {
+    margin-bottom: 32px;
+}
+
+.bodyTxt > *:not(.dc-bleedToArticleEdge)
+{
+    margin: 10px 28px;
+}
+
+figure {
+    margin: 0;
+}
+
+.du-color--gold-700 {
+    color: rgb(223, 119, 0);
+}
+.du-fontSize--base {
+    font-size: 18px;
+} 
+
+.du-bgColor--warmGray-50 {
+    background-color: #F7F6F5 ;
+}
+
+.du-margin-top--8 {
+    margin-top: 8px;
+}
+
+.du-borderStyle--solid {
+    border-style: solid;
+}
+.du-borderColor--coolGray-600 {
+    border-color: #656F83;
+} 
+.du-borderWidth--1 {
+    border-width: 1px;
+}
+.du-padding--4 {
+    padding: 4px;
+}
+ 
+.du-margin-children-vertical--0 > * {
+    margin: 0 auto;
+}
+
+.dc-bleedToArticleEdge {
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    width: 100vw;
+}
+
+.dc-paddingToContentEdge > * {
+    padding-left: calc(50% - 50vw) 28px;
+    padding-right: calc(50% - 50vw) 28px;
+}
+
+.dc-bgImageLayout--matchContainerWidth-bottom {
+    background-size: cover;
+    background-position: bottom;
+    background-repeat: no-repeat;
+  }
+
+.du-bgColor--black {
+    background-color: black;
+}
+
+.du-padding-top--12 {
+    padding-top: 12px;
+}
+
+
+
+.du-margin-top--12 {
+    margin-top: 12px;
+}
+
+img{
+    max-width: 100%;
+    max-height: 100%;
+    height: auto;
+    display: block;
+}
+
+.du-color--white {
+    color: white;
+}
+
+.dc-column-width--oneThird {
+    width: 33.3%;
+}
+
+.du-bgColor--teal-50 {
+    background-color: rgb(240 253 250);
+}
+
+.du-color--coolGray-500 {
+    color: #A2A2A2;
+} 
+
+.du-fontSize--basePlus2 {
+    font-size: 1.4rem;
+}
+
+.du-borderStyle--none {
+    border-style: none;
+}
+
+.dc-screenReaderText {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+}
+
+.borderSolid--bottom {
+    border-bottom: solid;
+}
+
+.east_right { 
+    float: right;
+}
+
+.half {
+    width: 50%;
+}
+
+.qu {
+    color: gray;
+}
+
+.du-borderStyle-top--solid {
+    border-top-style: solid;
+}
+
+.du-borderColor--gray-100 {
+    border-color: rgb(243 244 246);
+}
+
+.du-margin-top--4 {
+    margin-top: 4px;
+}
+
+.du-padding-top--4 {
+    padding-top: 4px;
+}
+
+.dc-column-width--oneQuarter {
+    column-width: 25%;
+}
+
+.du-bgColor--gray-50 {
+    color: black;
+    background-color: rgb(249 250 251);
+}
+
+.du-padding-vertical--4 {
+    padding: 4px 0px;
+}
+
+.du-padding-top--8 {
+    padding-top: 8px;
+}
+
+.du-fontSize--baseMinus1 {
+    font-size: 17px;
+}
+/*    */
+
+@media only screen and (min-width : 320px){
+    .du-margin-inlineEnd-mobileOnly--4 {
+        margin-inline-end: 4px;
+    }
+
+    .dc-columns-mobileOnly {
+        display: flex;
+    }
+
+    .dc-columns-mobileOnly > * {
+        flex: 1;
+    }
+
+    .du-bgImage-mobileOnly--none {
+        background-image: none; 
+    }
+
+    .du-margin-bottom-mobileOnly--6 {
+        margin-bottom: 6px;
+    }
+
+    .du-margin-bottom-mobileOnly--4 {
+        margin-bottom: 4px;
+    }
+}
+@media only screen and (min-width : 992px){
+    .du-margin-bottom-desktopOnly--4 {
+        margin-bottom: 4px;
+    }
+
+    .du-display-desktopOnly--none {
+            display: none;
+    }
+
+    .du-padding-desktopOnly--8 {
+        padding: 8px;
+    }
+
+    .du-margin-top-desktopOnly--8 {
+        margin-top: 8px;
+    } 
+
+    .du-padding-bottom-desktopOnly--80 {
+        padding-bottom: 80px;
+    }
+
+    .du-margin-children-bottom-desktopOnly--0 > * {
+        margin-bottom: 0;
+    }
+
+    .dc-columns-desktopOnly {
+        display: flex;
+    }
+
+    .dc-columns-order-desktopOnly--reverse {
+        flex-direction: row-reverse;
+    }
+
+    .dc-columns-desktopOnly > * {
+        flex: 1;
+    }
+
+    .du-margin-inlineEnd-desktopOnly--4  {
+        margin-inline-end: 4px;
+    }
+
+    .du-margin-inlineStart-desktopOnly--oneHalf {
+        margin-inline-start: 50%;
+    }
+}
+
+/*  */
+
+/*  dc-bgImageLayout--matchContainerWidth-bottom dc-bgImageZoomable  */

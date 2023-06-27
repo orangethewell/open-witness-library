@@ -3,7 +3,7 @@ use yew::prelude::*;
 use crate::components::publication::PubCatalog;
 use crate::utils::{
     pub_utils::Publication,
-    TauriWrappers::get_list_from_category,
+    tauri_wrappers::get_list_from_category,
     Localizations
 };
 

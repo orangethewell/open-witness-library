@@ -88,12 +88,15 @@ button {
 }
 
 .go-route-pub {
+  color: white;
+  font-weight: bold;
   background-color: #0f0f0f3d;
-  padding: 10px;
+  padding: 22px 10px;
   transition: padding-left 500ms, padding-right 500ms, background-color 0.5s;
 }
 
 .go-route-pub:hover{
+  color: white;
   background-color: #0f0f0fa6;
 }
 
@@ -103,7 +106,7 @@ button {
   top: 50%;
 }
 .go-pub-back:hover {
-  padding-left: 20px;
+  padding-left: 24px;
 }
 
 .go-pub-next {
@@ -113,7 +116,7 @@ button {
 }
 
 .go-pub-next:hover {
-  padding-right: 20px;
+  padding-right: 24px;
 }
 
 @media (prefers-color-scheme: dark) {

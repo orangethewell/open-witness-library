@@ -36,6 +36,7 @@ pub fn home() -> Html {
 
     html! {
         <>
+            <h1>{fl!(language_loader, "welcome-library")}</h1>
             <button {onclick}>{ fl!(language_loader, "update-list") }</button>
             <PubCatalog publications={(*publications).clone()}/>
         </>

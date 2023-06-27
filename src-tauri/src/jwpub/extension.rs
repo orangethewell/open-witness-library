@@ -11,6 +11,12 @@ pub struct Chapter {
     pub title: String,
     pub context_title: String
 }
+#[derive(Serialize, Deserialize)]
+pub struct ChapterContent {
+    pub content: String,
+    pub next_exists: bool,
+    pub previous_exists: bool
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Publication {

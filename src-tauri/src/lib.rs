@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use std::fs;
+use jwpub::extension::ChapterContent;
 use serde::{Serialize, Deserialize};
 use tauri::Manager;
 use tauri::State;
@@ -67,7 +68,7 @@ fn pubcatalog_get_summary_from<'r>(manager: State<'r, PubManager>, lang: String,
 
 /// Get chapter content from a defined publication.
 #[tauri::command]
-fn pubcatalog_get_chapter_content<'r>(manager: State<'r, PubManager>, lang: String, category: String, pub_symbol: String, content_id: i64) -> String {
+fn pubcatalog_get_chapter_content<'r>(manager: State<'r, PubManager>, lang: String, category: String, pub_symbol: String, content_id: i64) -> ChapterContent {
     let mut manager = tauri::async_runtime::block_on(manager.catalog.lock());
     println!("COMMAND REQUEST: Fetch Catalog | <Symbol: {pub_symbol}>: ContentId: {content_id}");
     
@@ -83,7 +84,6 @@ fn pubcatalog_set_media_location<'r>(manager: State<'r, PubManager>, lang: Strin
 
   manager.set_media_location(&lang, &category, &pub_symbol);
 }
-
 // ----------------------------------------------------
 
 
@@ -97,7 +97,7 @@ pub fn run() {
             pubcatalog_get_list_from,
             pubcatalog_get_summary_from,
             pubcatalog_get_chapter_content,
-            pubcatalog_set_media_location
+            pubcatalog_set_media_location,
         ])
         .setup(|app| {
             let main_window = app.get_window("main").unwrap();
@@ -145,7 +145,7 @@ pub fn run() {
                 let mut manager = tauri::async_runtime::block_on(pub_manager.catalog.lock());
 
                 if !query.is_empty() {
-                    let content = manager.get_chapter_content(arguments[0].to_owned(), arguments[1].to_owned(), arguments[2].to_owned(), query.get("contentId").unwrap().parse::<i64>().unwrap_or_default());
+                    let content = manager.get_chapter_content(arguments[0].to_owned(), arguments[1].to_owned(), arguments[2].to_owned(), query.get("contentId").unwrap().parse::<i64>().unwrap_or_default()).content;
                     ResponseBuilder::new()
                         .header("Access-Control-Allow-Origin", "*")
                         .mimetype("text/html")

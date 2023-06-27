@@ -3,7 +3,7 @@
 use inflate::inflate_bytes_zlib;
 use serde_json::Value;
 use std::{path::{PathBuf, Path}, fs, io::{self, Read}, collections::HashMap};
-use super::extension::{Publication, Chapter}; 
+use super::extension::{Publication, Chapter, ChapterContent}; 
 use sqlite;
 
 use openssl::sha::sha256;
@@ -184,7 +184,7 @@ impl PubCatalog {
     /// Get the content of a publication chapter. Request is made as query:
     /// `jwpub:///lang/category/pub?contentId={value}`
     /// Ex: jwpub://T/bk/lff_T?contentId=4
-    pub fn get_chapter_content(&mut self, lang: String, category: String, pub_symbol: String, chapter_id: i64) -> String {
+    pub fn get_chapter_content(&mut self, lang: String, category: String, pub_symbol: String, chapter_id: i64) -> ChapterContent {
         let pub_directory = self.normalize_request_directory(&lang, &category, &pub_symbol);
         let manifest = self.populate_manifest(&pub_directory).unwrap();
 
@@ -214,11 +214,20 @@ impl PubCatalog {
                     &encrypted_content
                 ).unwrap()).unwrap();
 
-                return std::str::from_utf8(&decrypted_content).expect("Decode Error").to_string();
+                let content = std::str::from_utf8(&decrypted_content).expect("Decode Error").to_string();
+                return ChapterContent {
+                    content,
+                    next_exists: self.next_chapter_exists(&lang, &category, &pub_symbol, chapter_id),
+                    previous_exists: self.previous_chapter_exists(&lang, &category, &pub_symbol, chapter_id)
+                }  
             } 
         }
 
-        String::from("")
+        ChapterContent {
+            content: "".to_owned(),
+            next_exists: false,
+            previous_exists: false
+        }
     }
 
     /// Get the publication icon/cover. Request is made as query:
@@ -234,6 +243,52 @@ impl PubCatalog {
         } else {
             return vec![];
         }
+    }
+
+    pub fn next_chapter_exists(&mut self, lang: &str, category: &str, pub_symbol: &str, chapter_id: i64) -> bool {
+        let pub_directory = self.normalize_request_directory(&lang, &category, &pub_symbol);
+        let manifest = self.populate_manifest(&pub_directory).unwrap();
+
+        if let Ok(connection) = sqlite::open(&pub_directory.join(format!("content/{}", manifest["publication"]["fileName"].as_str().unwrap().to_owned()))) {
+            let mut cursor = connection.prepare("SELECT publicationId FROM document WHERE documentId=?").unwrap()
+            .into_cursor()
+            .bind(&[sqlite::Value::Integer(chapter_id + 1)])
+            .unwrap();
+
+            while let Some(Ok(row)) = cursor.next() {
+                let publication_id = row.get::<i64, _>(0);
+
+                if publication_id == 1 {
+                    return true
+                } else {
+                    return false
+                }
+            }
+        }
+        false
+    }
+
+    pub fn previous_chapter_exists(&mut self, lang: &str, category: &str, pub_symbol: &str, chapter_id: i64) -> bool {
+        let pub_directory = self.normalize_request_directory(&lang, &category, &pub_symbol);
+        let manifest = self.populate_manifest(&pub_directory).unwrap();
+
+        if let Ok(connection) = sqlite::open(&pub_directory.join(format!("content/{}", manifest["publication"]["fileName"].as_str().unwrap().to_owned()))) {
+            let mut cursor = connection.prepare("SELECT publicationId FROM document WHERE documentId=?").unwrap()
+            .into_cursor()
+            .bind(&[sqlite::Value::Integer(chapter_id - 1)])
+            .unwrap();
+
+            while let Some(Ok(row)) = cursor.next() {
+                let publication_id = row.get::<i64, _>(0);
+
+                if publication_id == 1 {
+                    return true
+                } else {
+                    return false
+                }
+            } 
+        }
+        false 
     }
 
     // Media Location: functions for `jwpub-media` URI.

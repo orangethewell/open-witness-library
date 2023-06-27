@@ -1,10 +1,14 @@
 use crate::utils::{
     pub_utils::{Publication, Chapter},
-    TauriWrappers::set_media_location,
-    convert_file_src
+    tauri_wrappers::{set_media_location, get_chapter_content},
+    convert_file_src, log
 };
+use serde::{Serialize, Deserialize};
 use yew::{prelude::*, virtual_dom::AttrValue};
 use yew_router::prelude::*;
+use gloo::utils::document;
+use wasm_bindgen_futures::spawn_local;
+use web_sys::{Element, Node};
 use crate::views::Route;
 pub struct PubCatalog {
     pub limit: usize,
@@ -134,5 +138,78 @@ impl PubSummary {
                 </a>
             </li>
         }
+    }
+}
+
+#[derive(Properties, PartialEq)]
+pub struct ViewerProps {
+    pub lang: AttrValue,
+    pub category: AttrValue,
+    pub pub_symbol: AttrValue,
+    pub chapter_id: i32
+}
+
+#[derive(PartialEq)]
+pub struct ViewerAttr {
+    pub lang: String,
+    pub category: String,
+    pub pub_symbol: String,
+    pub chapter_id: i32
+}
+#[derive(Serialize, Deserialize, PartialEq, Default)]
+pub struct ChapterContent {
+    content : String,
+    next_exists: bool,
+    previous_exists: bool,
+}
+
+#[function_component(ChapterView)]
+pub fn chapter_viewer(props: &ViewerProps) -> Html {
+    let content = use_state(|| ChapterContent::default());
+    let props_stateble = use_state(|| ViewerAttr {
+        lang: props.lang.clone().to_string(),
+        category: props.category.clone().to_string(),
+        pub_symbol: props.pub_symbol.clone().to_string(),
+        chapter_id: props.chapter_id.clone()
+    });
+
+    {
+        let content = content.clone();
+        use_effect_with_deps(move |_| {
+            let props_clone = props_stateble.clone();
+            spawn_local(async move {
+                let data = get_chapter_content(&props_clone.lang, &props_clone.category, &props_clone.pub_symbol, props_clone.chapter_id).await;    
+                content.set(data);           
+            });
+
+            ||{}
+        }, props.chapter_id);
+    }
+
+    let node = use_memo(
+        |_|{
+            log("Content changed!");
+            let content = content.clone();
+            let div: Element = document().create_element("div").unwrap();
+            div.set_inner_html(&*content.content);
+            let node: Node = div.into();
+            Html::VRef(node)
+        },
+        (content.clone(), props.chapter_id)
+    );
+    html!{
+    <>
+        if content.previous_exists {
+            <Link<Route> to={Route::PubViewRedirect{lang: (&props).lang.clone().to_string(), categ: (&props).category.clone().to_string(), pub_symbol: (&props).pub_symbol.clone().to_string(), chapter_id: (props.chapter_id - 1) as i32}}>
+            <div class={classes!("go-route-pub", "go-pub-back")}>{"<"}</div>
+            </Link<Route>>
+        }
+        if content.next_exists {
+            <Link<Route> to={Route::PubViewRedirect{lang: (&props).lang.clone().to_string(), categ: (&props).category.clone().to_string(), pub_symbol: (&props).pub_symbol.clone().to_string(), chapter_id: (props.chapter_id + 1) as i32}}>
+            <div class={classes!("go-route-pub", "go-pub-next")}>{">"}</div>
+            </Link<Route>>
+        }
+        {(*node).clone()}
+    </>
     }
 }

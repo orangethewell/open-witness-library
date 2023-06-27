@@ -12,6 +12,9 @@ pub mod utils {
         #[at("/view/:lang/:categ/:pub_symbol")]
         SummaryView {lang: String, categ: String, pub_symbol: String},
 
+        #[at("/redirect/:lang/:categ/:pub_symbol/:chapter_id")]
+        PubViewRedirect {lang: String, categ: String, pub_symbol: String, chapter_id: i32},
+
         #[at("/view/:lang/:categ/:pub_symbol/:chapter_id")]
         PubView {lang: String, categ: String, pub_symbol: String, chapter_id: i32},
 
@@ -22,4 +25,4 @@ pub mod utils {
 
 pub use utils::Route;
 pub use home::Home;
-pub use reader::{PubView, SummaryView};
+pub use reader::{PubViewRedirect, SummaryView};

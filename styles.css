@@ -87,8 +87,33 @@ button {
   outline: none;
 }
 
-#greet-input {
-  margin-right: 5px;
+.go-route-pub {
+  background-color: #0f0f0f3d;
+  padding: 10px;
+  transition: padding-left 500ms, padding-right 500ms, background-color 0.5s;
+}
+
+.go-route-pub:hover{
+  background-color: #0f0f0fa6;
+}
+
+.go-pub-back {
+  position: fixed;
+  left: 1px;
+  top: 50%;
+}
+.go-pub-back:hover {
+  padding-left: 20px;
+}
+
+.go-pub-next {
+  position: fixed;
+  right: 1px;
+  top: 50%
+}
+
+.go-pub-next:hover {
+  padding-right: 20px;
 }
 
 @media (prefers-color-scheme: dark) {

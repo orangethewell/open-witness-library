@@ -56,21 +56,17 @@ pub mod pub_utils {
 }
 
 
-pub mod TauriWrappers {
-    use std::collections::HashMap;
+pub mod tauri_wrappers {
+    #![allow(non_snake_case)]
+    use std::{rc::Rc, cell::RefCell};
 
-    use crate::utils::pub_utils::{Publication, Chapter};
-    use wasm_bindgen::{JsValue, UnwrapThrowExt};
+    use crate::{utils::pub_utils::{Publication, Chapter}, components::publication::ChapterContent};
     use serde::{Serialize, Deserialize};
     use serde_wasm_bindgen::{to_value, from_value};
-    use wasm_bindgen_futures::spawn_local;
     use crate::utils::{
-        sync_invoke_without_args,
         invoke_with_args,
         log
     };
-
-    use super::invoke_without_args;
     
 
     #[derive(Serialize, Deserialize)]
@@ -104,7 +100,6 @@ pub mod TauriWrappers {
 
         // TODO: Consume value because it's a promise;
         let value = invoke_with_args("pubcatalog_get_list_from", to_value(&args).unwrap());
-        let arrayofpub: Vec<Publication>;
         let promise = js_sys::Promise::resolve(&value);
         let result = wasm_bindgen_futures::JsFuture::from(promise).await;
 
@@ -136,7 +131,7 @@ pub mod TauriWrappers {
         invoke_with_args("pubcatalog_set_media_location", to_value(&args).unwrap());
     }
 
-    pub async fn get_chapter_content(lang: &str, category: &str, pub_symbol: &str, chapter_id: i32) -> String {
+    pub async fn get_chapter_content(lang: &str, category: &str, pub_symbol: &str, chapter_id: i32) -> ChapterContent {
         let args = ChapterArgs{lang: lang.to_owned(), category: category.to_owned(), pubSymbol: pub_symbol.to_owned(), contentId: chapter_id.into()};
         let content = wasm_bindgen_futures::JsFuture::from(
             js_sys::Promise::resolve(
@@ -146,7 +141,8 @@ pub mod TauriWrappers {
         log(&format!("Is string? {}", content.is_string()));
         log(&format!("Is object? {}", content.is_object()));
         log(&format!("{:#?}", content));
-        content.as_string().unwrap_or("Erroneous String".to_owned())
+        let content: ChapterContent = from_value(content).unwrap_or(ChapterContent::default());
+        content
     }
 
     pub async fn get_summary_from(lang: &str, category: &str, pub_symbol: &str) -> Vec<Chapter>{

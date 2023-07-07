@@ -6,10 +6,10 @@ plugins {
 
 android {
     compileSdk = 33
-    namespace = "com.tauri.open_witness_library"
+    namespace = "com.orangethewell.open_witness_library"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
-        applicationId = "com.tauri.open_witness_library"
+        applicationId = "com.orangethewell.open_witness_library"
         minSdk = 24
         targetSdk = 33
         versionCode = 1

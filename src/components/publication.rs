@@ -40,7 +40,7 @@ impl Component for PubCatalog {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html!{
-            <ul>
+            <ul class={"catalog"}>
                 {for ctx.props().publications.iter().map(|publication| self.render_publication(&ctx, publication))} 
             </ul>
         }
@@ -70,9 +70,12 @@ impl PubCatalog {
         html!{
             <li>
                 <a {onclick}>
-                    <div>
+                    <div class={"catalog-item"}>
                     <img src={resolved_cover_path}/>
-                    <p>{(&publication).title.clone()}</p>
+                    <div class={"pub-info"}>
+                        <h3>{(&publication).title.clone()}</h3>
+                        <span class={"year-issue"}>{(&publication).year}</span>
+                    </div>
                     </div>
                 </a>
             </li>

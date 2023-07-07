@@ -80,9 +80,9 @@ figure {
     width: 100vw;
 }
 
-.dc-paddingToContentEdge > * {
-    padding-left: calc(50% - 50vw) 28px;
-    padding-right: calc(50% - 50vw) 28px;
+.dc-paddingToContentEdge > *:not(.dc-bleedToArticleEdge) {
+    margin-left: 28px;
+    margin-right: 28px;
 }
 
 .dc-bgImageLayout--matchContainerWidth-bottom {
@@ -213,7 +213,7 @@ img{
     }
 
     .du-bgImage-mobileOnly--none {
-        background-image: none; 
+        background-image: none !important; 
     }
 
     .du-margin-bottom-mobileOnly--6 {

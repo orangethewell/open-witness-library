@@ -1,4 +1,4 @@
-/src/main/java/com/tauri/open_witness_library/generated
+/src/main/java/com/orangethewell/open_witness_library/generated
 /src/main/jniLibs/**/*.so
 /src/main/assets/tauri.conf.json
 /tauri.build.gradle.kts

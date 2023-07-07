@@ -16,8 +16,19 @@ fn switch(routes: Route) -> Html {
 #[function_component(Main)]
 pub fn app() -> Html {
     html! {
-        <BrowserRouter>
-            <Switch<Route> render={switch}/>
-        </BrowserRouter>
+        <>
+            <div class={classes!("side-navbar")}>
+                <a href={"/"}>
+                    <div class={classes!("nav-button")}>
+                        <img src={"public/house-icon.svg"}/>
+                    </div>
+                </a>
+            </div>
+            <div class={classes!("section-area")}>
+                <BrowserRouter>
+                    <Switch<Route> render={switch}/>
+                </BrowserRouter>
+            </div>
+        </>
     }
 }

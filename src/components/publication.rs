@@ -4,11 +4,12 @@ use crate::utils::{
     convert_file_src, log
 };
 use serde::{Serialize, Deserialize};
+use wasm_bindgen::JsCast;
 use yew::{prelude::*, virtual_dom::AttrValue};
 use yew_router::prelude::*;
 use gloo::utils::document;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{Element, Node};
+use web_sys::{Element, Node, DomParser, SupportedType};
 use crate::views::Route;
 pub struct PubCatalog {
     pub limit: usize,
@@ -107,11 +108,11 @@ impl Component for PubSummary {
         let props = ctx.props().clone();
         html!{
             if props.chapters.len() > 0 {
-            <ul>
+            <ul class={"article-content"}>
                 {for props.chapters.iter().map(|chapter| self.render_chapter_item(&ctx, chapter))} 
             </ul>
             } else {
-                <div>
+                <div class={"article-content"}>
                     <p>{ "Please, Wait..." }</p>
                 </div>
             }
@@ -194,14 +195,26 @@ pub fn chapter_viewer(props: &ViewerProps) -> Html {
             log("Content changed!");
             let content = content.clone();
             let div: Element = document().create_element("div").unwrap();
-            div.set_inner_html(&*content.content);
+            let parsed_content = DomParser::new().unwrap().parse_from_string(&*content.content, SupportedType::TextHtml).unwrap();
+            let elements = parsed_content.get_elements_by_tag_name("a");
+            for element in 0..elements.length(){
+                if let Some(anchor_tag) = elements.item(element).unwrap().dyn_ref::<web_sys::HtmlAnchorElement>() {
+                    log("found a anchor");
+                    if anchor_tag.hostname().contains("jw.org") {
+                        log("changing anchor target...");
+                        anchor_tag.set_target("_blank");
+                    }
+                }
+            }
+            div.set_inner_html(&parsed_content.document_element().unwrap().inner_html());
             let node: Node = div.into();
             Html::VRef(node)
         },
         (content.clone(), props.chapter_id)
     );
+    
     html!{
-    <>
+    <div class={"article-content"}>
         if content.previous_exists {
             <Link<Route> to={Route::PubViewRedirect{lang: (&props).lang.clone().to_string(), categ: (&props).category.clone().to_string(), pub_symbol: (&props).pub_symbol.clone().to_string(), chapter_id: (props.chapter_id - 1) as i32}}>
             <div class={classes!("go-route-pub", "go-pub-back")}>{"<"}</div>
@@ -213,6 +226,6 @@ pub fn chapter_viewer(props: &ViewerProps) -> Html {
             </Link<Route>>
         }
         {(*node).clone()}
-    </>
+    </div>
     }
 }

@@ -54,17 +54,26 @@ body {
 }
 
 .catalog-item {
-  color: white;
+  color: black;
   max-height: 120px;
   margin: 10px;
   display: flex;
-  background-color: #2b2b2b;
-  box-shadow: 0 0 4px 0 hsla(0, 0%, 0%, 0.288);
+  background-color: #fafafa;
+  transition-property: all;
+  transition-duration: 250ms;
+  box-shadow: 0 2px 6px 0 hsla(0, 0%, 0%, 0.288);
+}
+
+.category-button {
+  border-radius: 20px;
+  padding: 0 25px;
+  margin-left: 5px;
 }
 
 .catalog-item:hover {
-  color: white;
-  background-color: #3a3a3a;
+  color: rgb(0, 0, 0);
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px 0 hsla(0, 0%, 0%, 0.588);
 }
 
 .catalog-item img {
@@ -108,17 +117,6 @@ body {
   flex-direction: column;
   justify-content: center;
   text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
 }
 
 .row {
@@ -204,6 +202,23 @@ button {
   :root {
     color: #f6f6f6;
     background-color: #2f2f2f;
+  }
+
+  .catalog-item {
+    color: white;
+    max-height: 120px;
+    margin: 10px;
+    display: flex;
+    background-color: #2b2b2b;
+    box-shadow: 0 0 4px 0 hsla(0, 0%, 0%, 0.288);
+    transition-property: all;
+    transition-duration: 250ms;
+  }
+
+  .catalog-item:hover {
+    color: white;
+    background-color: #3a3a3a;
+    box-shadow: 0 0 8px 0 hsla(0, 0%, 0%, 0.288);
   }
 
   a:hover {

@@ -1,14 +1,11 @@
 #![allow(unused_must_use)]
 
-use std::collections::HashMap;
-use std::fs;
+use std::{fs, collections::HashMap};
+use tauri_plugin_dialog::DialogExt;
 use jwpub::extension::ChapterContent;
 use serde::{Serialize, Deserialize};
-use tauri::Manager;
-use tauri::State;
-use tauri::http::{ResponseBuilder};
+use tauri::{State, Manager, http::ResponseBuilder, async_runtime::Mutex};
 use url::Url;
-use tauri::async_runtime::{Mutex};
 
 mod jwpub;
 
@@ -20,9 +17,14 @@ struct PubManager {
 // ----------------------------------------------------
 /// Open system dialog for selecting a `.jwpub` file. This file will be installed automatically.
 #[tauri::command]
-async fn pubcatalog_install_jwpub_file<'r>(manager: State<'r, PubManager>) -> Result<(), ()> {
-    todo!()
-}
+async fn pubcatalog_install_jwpub_file<'r>(manager: State<'r, PubManager>, app: tauri::AppHandle) -> Result<(), ()> {
+    let manager = manager.catalog.lock().await;
+    println!("COMMAND REQUEST: Catalog installing jwpub...");
+    let path = app.dialog().file().blocking_pick_file().unwrap().path;
+    manager.install_publication(&path);   
+    println!("COMMAND DEBUG: Installing file `{}`", &path.display());
+    Ok(())    
+    }
 
 #[derive(Serialize, Deserialize)]
 struct PublicationList {
@@ -84,6 +86,16 @@ fn pubcatalog_set_media_location<'r>(manager: State<'r, PubManager>, lang: Strin
 
   manager.set_media_location(&lang, &category, &pub_symbol);
 }
+
+/// Get available categories on catalog.
+#[tauri::command]
+fn pubcatalog_get_available_categories<'r>(manager: State<'r, PubManager>, lang: String) -> Vec<String> {
+    let manager = tauri::async_runtime::block_on(manager.catalog.lock());
+    println!("COMMAND REQUEST: Check categories... | Lang: {lang}");
+
+    manager.get_available_categories(lang)
+}
+
 // ----------------------------------------------------
 
 
@@ -92,12 +104,14 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_window::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             pubcatalog_install_jwpub_file,
             pubcatalog_get_list_from,
             pubcatalog_get_summary_from,
             pubcatalog_get_chapter_content,
             pubcatalog_set_media_location,
+            pubcatalog_get_available_categories,
         ])
         .setup(|app| {
             let main_window = app.get_window("main").unwrap();

@@ -4,7 +4,7 @@
 <p align=center><b>Open Witness Library</b> is a program to read articles that carries <i>God's true name</i>.</p>
 
 ## Warning
-This branch is outdated, please refer to the most [recent branch](https://github.com/orangethewell/open-witness-library/tree/ui-development).
+This branch is outdated, please refer to the most [recent branch](https://github.com/orangethewell/open-witness-library/tree/feature/ui-development).
 ---
 This program is a alternative for **JW Library** app[^1] for OSes that doesn't support the app or had lost support through the years. You can read `.jwpub` files and study Bible.
 

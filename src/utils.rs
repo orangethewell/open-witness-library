@@ -62,8 +62,10 @@ pub mod tauri_wrappers {
 
     use crate::{utils::pub_utils::{Publication, Chapter}, components::publication::ChapterContent};
     use serde::{Serialize, Deserialize};
+    use wasm_bindgen::JsValue;
     use serde_wasm_bindgen::{to_value, from_value};
     use crate::utils::{
+        sync_invoke_without_args,
         invoke_with_args,
         log
     };
@@ -86,9 +88,28 @@ pub mod tauri_wrappers {
         msg: String
     }
 
-    // pub async fn install_jwpub_file() -> Result<JsValue, JsValue>{
-    //     sync_invoke_without_args("pubcatalog_install_jwpub_file").await  
-    // } 
+    pub async fn install_jwpub_file() -> Result<JsValue, JsValue>{
+        Ok(sync_invoke_without_args("pubcatalog_install_jwpub_file").await)  
+    }
+    
+    pub async fn get_available_categories(lang: String) -> Vec<String> {
+        #[derive(Serialize, Deserialize)]
+        struct Args {
+            lang: String 
+        }
+
+        let args = Args {lang};
+
+            let value = invoke_with_args("pubcatalog_get_available_categories", to_value(&args).unwrap());
+        let result = wasm_bindgen_futures::JsFuture::from(js_sys::Promise::resolve(&value)).await;
+
+        if let Ok(list_object) = result {
+            let list: Vec<String> = from_value(list_object).unwrap();
+            list
+        } else {
+            vec!["Err".to_owned()]
+        }
+    }
 
     pub async fn get_list_from_category(lang: String, category: String, start_idx: usize, limit: usize) -> Vec<Publication> {
         let args = GetListArgs {

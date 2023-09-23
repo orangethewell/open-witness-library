@@ -40,7 +40,7 @@ pub struct PubCatalog {
     cached_key: HashMap<String, Vec<u8>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum CatalogResponse {
     CatOk,
     CatError(String),
@@ -74,7 +74,7 @@ impl PubCatalog {
         }
 
         let filename = pub_path.file_name().unwrap().to_str().to_owned().unwrap();
-        let lang: String = filename.split("_").collect::<Vec<_>>()[1].to_owned();
+        let lang: String = filename.split("_").collect::<Vec<_>>()[1].to_owned().split(".").collect::<Vec<_>>()[0].to_string();
         let category: String = {
             manifest["publication"]["categories"][0].as_str().unwrap().to_string()
         };
@@ -111,14 +111,35 @@ impl PubCatalog {
         CatalogResponse::CatOk
     }
 
+    pub fn get_available_categories(&self, lang: String) -> Vec<String> {
+        let pub_categories_local = self.local.join(format!("publications/{lang}/"));
+        let dir_result = fs::read_dir(&pub_categories_local);
+        let mut available_categories: Vec<String> = vec![];
+        if dir_result.is_err() {
+            return vec![]; 
+        }
+
+        for entry in dir_result.unwrap() {
+            let entry = entry.unwrap();
+            if entry.file_type().unwrap().is_dir() {
+                available_categories.push(entry.file_name().into_string().unwrap());
+            }
+        }
+
+        available_categories
+    }
+
     /// Return a List of publications of certain category. (Max of 25)
     pub fn get_list_from_category(&self, lang: String, category: String, start_idx: Option<usize>, limit: Option<usize>) -> Vec<Publication> {
         let pub_list_target = self.local.join(format!("publications/{lang}/{category}"));
-        // TODO: Make a parser for when category be "*".
         let mut list: Vec<Publication> = vec![];
         println!("Catalog Manager >> Category/directory: {}", pub_list_target.display());
         // BUG: Check if dir exists
-        for entry in fs::read_dir(&pub_list_target).unwrap().skip(start_idx.or(Some(0)).unwrap()).take(std::cmp::min(limit.or(Some(25)).unwrap(), 25)) {
+        let dir_result = fs::read_dir(&pub_list_target);
+        if dir_result.is_err() {
+            return vec![];
+        } 
+        for entry in dir_result.unwrap().skip(start_idx.or(Some(0)).unwrap()).take(std::cmp::min(limit.or(Some(25)).unwrap(), 25)) {
             let manifest: Value; 
             let entry = entry.unwrap();
             {
@@ -302,6 +323,7 @@ impl PubCatalog {
 
     fn populate_manifest(&self, pub_directory: &PathBuf) -> Result<Value, ()> {
         let manifest_path = pub_directory.join("manifest.json");
+        println!("{}", manifest_path.display());
         if let Ok(mut manifest_file) = fs::File::open(manifest_path) {
             let mut manifest_data = String::new();
             manifest_file.read_to_string(&mut manifest_data).unwrap();

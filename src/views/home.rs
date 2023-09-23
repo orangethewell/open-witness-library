@@ -1,6 +1,7 @@
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use crate::components::publication::PubCatalog;
+use crate::components::{publication::PubCatalog, category::CategoryList};
+use crate::utils::tauri_wrappers::install_jwpub_file;
 use crate::utils::{
     pub_utils::Publication,
     tauri_wrappers::get_list_from_category,
@@ -23,13 +24,22 @@ pub fn home() -> Html {
         let pub_list: Vec<Publication> = vec![];
         pub_list
     });
-    let onclick = {
+
+    let add_onclick = {
+       Callback::from(move |_| {
+            spawn_local(async move {
+                install_jwpub_file().await;
+            })
+        }) 
+    };
+
+    let onCategorySelected = {
         let publications = publications.clone();
-        Callback::from(move |_|  
+        Callback::from(move |category|  
             {
                 let publications = publications.clone();
                 spawn_local(async move {
-                publications.set(get_list_from_category("T".to_string(), "bk".to_string(), 0, 25).await);
+                publications.set(get_list_from_category("T".to_string(), category, 0, 25).await);
                 });
             }) 
         };
@@ -37,7 +47,8 @@ pub fn home() -> Html {
     html! {
         <>
             <h1>{fl!(language_loader, "welcome-library")}</h1>
-            <button {onclick}>{ fl!(language_loader, "update-list") }</button>
+            <button onclick={add_onclick}>{"+"}</button>
+            <CategoryList lang="T" {onCategorySelected}/>
             <PubCatalog publications={(*publications).clone()}/>
         </>
     }

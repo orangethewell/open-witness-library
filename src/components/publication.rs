@@ -116,7 +116,7 @@ impl Component for PubSummary {
                     <p>{ "Please, Wait..." }</p>
                 </div>
             }
-        }
+       }
     }
 }
 

@@ -132,6 +132,11 @@ Then you can run your application on iOS with the following commmand:
 cargo tauri ios dev
 ```
 
+## Contributing
+
+Pull requests are welcome. For translations, take a look on `i18n/` folder. For major changes, please open an issue first to discuss what you would like to change.
+
+
 ## Disclaimer
 This program don't have any relationship with **JW Library** developers or the _Watch Tower Bible and Tract Society of Pennsylvania_. This is a program maintened by the community. Any bug you have using this program should be issued [there](https://github.com/orangethewell/open-witness-library/issues).
 

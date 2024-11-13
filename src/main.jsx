@@ -8,6 +8,7 @@ import router from "./routes"
 import "./main.css"
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import './i18n'
 
 const themeOptions = createTheme({
   colorSchemes: {

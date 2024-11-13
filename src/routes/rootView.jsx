@@ -2,16 +2,21 @@ import React, { useState } from 'react';
 import { Button, Divider, Toolbar, Drawer, AppBar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, IconButton, Box } from '@mui/material';
 import { Outlet, redirect, useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
-import { HomeTwoTone } from '@mui/icons-material';
+import { CollectionsBookmarkTwoTone, HomeTwoTone, SettingsTwoTone } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '@emotion/react';
 
 const Root = () => {
+    const { t } = useTranslation();
+    useTheme();
+
     const [open, setOpen] = useState(false);
 
-  const toggleDrawer = (newOpen) => () => {
-    setOpen(newOpen);
-  };
+    const toggleDrawer = (newOpen) => () => {
+        setOpen(newOpen);
+    };
 
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
     return (
         <>
@@ -46,22 +51,40 @@ const Root = () => {
                 onClose={toggleDrawer(false)}
             >
                 <Toolbar sx={{ minHeight: '48px !important' }}/>
-                <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
+                <Box sx={{ width: 240 }} role="presentation" onClick={toggleDrawer(false)}>
                     <List>
-                        <ListItem key={"Home"} disablePadding>
+                        <ListItem key={"home"} disablePadding>
                             <ListItemButton onClick={(_) => navigate("/")}>
                             <ListItemIcon>
                                 <HomeTwoTone/>
                             </ListItemIcon>
-                            <ListItemText primary={"Home"} />
+                            <ListItemText primary={t("menu.home")} />
+                            </ListItemButton>
+                        </ListItem>
+                        <ListItem key={"library"} disablePadding>
+                            <ListItemButton onClick={(_) => navigate("/")}>
+                            <ListItemIcon>
+                                <CollectionsBookmarkTwoTone/>
+                            </ListItemIcon>
+                            <ListItemText primary={t("menu.library")} />
+                            </ListItemButton>
+                        </ListItem>
+                    </List>
+                    <List style={{ position: "absolute", bottom: "0", width: 240 }}>
+                        <ListItem key={"settings"} disablePadding>
+                            <ListItemButton onClick={(_) => navigate("/settings")}>
+                            <ListItemIcon>
+                                <SettingsTwoTone/>
+                            </ListItemIcon>
+                            <ListItemText primary={t("menu.settings")} />
                             </ListItemButton>
                         </ListItem>
                     </List>
                 </Box>
             </Drawer>
-            <div className='outlet-container'>
+            <Box className='outlet-container'>
                 <Outlet/>
-            </div>
+            </Box>
         </>
     );
 };

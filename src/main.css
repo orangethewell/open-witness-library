@@ -46,22 +46,6 @@ body {
   background-color: #8D8D8D;
 }
 
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
 .outlet-container {
   padding: 48px;
   height: 100vh;
@@ -69,12 +53,19 @@ body {
 }
 
 .container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+  margin: 32px
+}
+
+h1, h2, h3, h4, h5, h6, p {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.subtext {
+  font-size: 12px;
+  color: #8d8d8d;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .go-route-pub {
@@ -108,24 +99,4 @@ body {
 
 .go-pub-next:hover {
   padding-right: 24px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
 }

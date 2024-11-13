@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
+import { Avatar, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 
 
 const PubCatalog = ({ publications }) => {
@@ -17,18 +18,19 @@ const PubCatalog = ({ publications }) => {
     };
 
     return (
-        <ul>
+        <List>
             {publications.map((publication) => (
-                <li key={publication.symbol}>
-                    <a onClick={() => handleClick(publication)}>
-                        <div>
-                            <img src={convertFileSrc(publication.cover_icon_path)} alt={publication.title} />
-                            <p>{publication.title}</p>
-                        </div>
-                    </a>
-                </li>
+                <ListItemButton key={publication.symbol} onClick={() => handleClick(publication)}>
+                    <ListItemIcon>
+                        <img style={{marginRight: 20, height: 90}} src={convertFileSrc(publication.cover_icon_path)} alt={publication.title} />
+                    </ListItemIcon>
+                    <ListItemText
+                        primary={publication.title}
+                        secondary={publication.year}
+                    />
+                </ListItemButton>
             ))}
-        </ul>
+        </List>
     );
 };
 

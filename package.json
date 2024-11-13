@@ -16,8 +16,11 @@
     "@mui/material": "^6.1.6",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-shell": "^2",
+    "i18next": "^23.16.5",
+    "i18next-browser-languagedetector": "^8.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-i18next": "^15.1.1",
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {

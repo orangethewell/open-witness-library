@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PubCatalog from '../components/catalog';
 import { invoke } from '@tauri-apps/api/core';
-
+import { Button } from '@mui/material';
 const Home = () => {
     const [publications, setPublications] = useState([]);
     
@@ -13,7 +13,7 @@ const Home = () => {
 
     return (
         <>
-            <button onClick={handleClick}>Update List</button>
+            <Button onClick={handleClick}>Update List</Button>
             <PubCatalog publications={publications} />
         </>
     );

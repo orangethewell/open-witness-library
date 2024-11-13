@@ -4,33 +4,38 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
-import Home from "./routes/home";
-import SummaryView from "./routes/summaryView";
-import PubViewRedirect from "./routes/pubRedirectView";
-import ChapterView from "./routes/chapterView";
+import router from "./routes"
 import "./main.css"
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Home />,
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
+const themeOptions = createTheme({
+  colorSchemes: {
+    light: {
+      primary: '#643ed8',
+      secondary: '#f50000',
+    },
+    dark: {
+      primary: '#643ed8',
+      secondary: '#f50000',
+    },
+    contrastThreshold: 3,
+    tonalOffset: 0.2,
   },
-  {
-    path: "/summary/:lang/:category/:pubSymbol", 
-    element: <SummaryView />
+  palette: {
+    primary: {
+      main: '#643ed8',
+    },
+    secondary: {
+      main: '#f50000',
+    },
   },
-  {
-    path:"/redirect/:lang/:category/:pubSymbol/:chapterId",
-    element: <PubViewRedirect />
-  },
-  {
-    path:"/pubview/:lang/:category/:pubSymbol/:chapterId",
-    element: <ChapterView />
-  }
-]);
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <RouterProvider router={router}/>
+    <ThemeProvider theme={themeOptions}>
+      <RouterProvider router={router}/>
+    </ThemeProvider>
   </React.StrictMode>,
 );

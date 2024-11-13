@@ -7,20 +7,7 @@ This program is a alternative for **JW Library** app[^1] for OSes that doesn't s
 
 ## Features
 
-This program still is a work-in-progress, so it isn't full compatible with all publications and publication's features. You can track the features present on the program there:
-
-- [ ] Publications:
-    - [x] Read the publications;
-    - [ ] Aswner the publication questions on textboxes;
-    - [ ] Highlight publication text;
-    - [ ] Make notes;
-    - [ ] Watch publication's videos;
-- [ ] Bible:
-    - [ ] Read Bible; `You can read partially Bible's content`
-    - [ ] Bookmark Bible versicles and chapters;
-    - [ ] Read from Publications;
-    - [ ] Compare multiple Bible editions;
-
+This program still is a work-in-progress, so it isn't full compatible with all publications and publication's features. You can track the features present on the program [here](https://github.com/orangethewell/open-witness-library/issues/5)
 
 ## Installation
 

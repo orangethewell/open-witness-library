@@ -1,4 +1,5 @@
 import Home from "./routes/homeView";
+import SettingsView from "./routes/settingsView";
 import SummaryView from "./routes/summaryView";
 import PubViewRedirect from "./routes/pubRedirectView";
 import ChapterView from "./routes/chapterView";
@@ -12,8 +13,11 @@ const routes = [
         children: [
             {
                 index: true,
-                path: "/",
                 element: <Home />,
+            },
+            {
+                path: "/settings",
+                element: <SettingsView />,
             },
             {
                 path: "/summary/:lang/:category/:pubSymbol", 

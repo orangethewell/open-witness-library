@@ -1,40 +1,39 @@
 [package]
 name = "open-witness-library"
-version = "0.0.0"
+version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
-license = ""
-repository = ""
 edition = "2021"
-
-[lib]
-name = "open_witness_library_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "open_witness_library_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
 [build-dependencies]
-tauri-build = { version = "2.0.0-alpha", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-alpha", features = ["linux-protocol-headers", "protocol-asset"] }
-tauri-plugin-window = "2.0.0-alpha"
-tauri-plugin-shell = "2.0.0-alpha"
-tauri-plugin-dialog = "2.0.0-alpha"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 
 # Application Deps 
-zip = "0.6.3"
+zip = "2.2.0"
 sqlite = "0.28.0"
-openssl = "0.10.42"
+typenum = "1.17.0"
+sha2 = "0.10"
+aes = "0.8.4"
+cbc = "0.1.2"
 hex = "0.4.3"
 inflate = "0.4.5"
 tempfile = "3"
 url = "2.2.3"
 fs_extra = "1.2.0"
-
-[features]
-# this feature is used for production builds or when `devPath` points to the filesystem
-# DO NOT REMOVE!!
-custom-protocol = ["tauri/custom-protocol"]
+log = "0.4.22"
+env_logger = "0.11.5"

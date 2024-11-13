@@ -69,7 +69,7 @@ After installing it, you can run the application with the following command:
 cargo tauri dev
 ```
 
-### Running on mobile
+### Running on mobile (NOTE: Not Supported for now)
 *Open Witness Library* also runs on **Android** and **iOS**, but it isn't fully supported. If you want to test it out on Android, you need to add the Android targets to your rustup installation by running the following command:
 ```sh
 rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android

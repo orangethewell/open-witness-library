@@ -1,39 +1,35 @@
-#![allow(unused_must_use)]
+pub mod utils;
 
-use std::{fs, collections::HashMap};
-use tauri_plugin_dialog::DialogExt;
-use jwpub::extension::ChapterContent;
+pub mod publication;
+
+use std::collections::HashMap;
+use std::fs;
+use publication::extension::ChapterContent;
 use serde::{Serialize, Deserialize};
-use tauri::{State, Manager, http::ResponseBuilder, async_runtime::Mutex};
+use tauri::{Manager, State, http::Response};
 use url::Url;
-
-mod jwpub;
+use tauri::async_runtime::{Mutex};
 
 struct PubManager {
-    catalog: Mutex<jwpub::PubCatalog>
+    catalog: Mutex<publication::PubCatalog>
 }
 
 // # Catalog API
 // ----------------------------------------------------
 /// Open system dialog for selecting a `.jwpub` file. This file will be installed automatically.
 #[tauri::command]
-async fn pubcatalog_install_jwpub_file<'r>(manager: State<'r, PubManager>, app: tauri::AppHandle) -> Result<(), ()> {
-    let manager = manager.catalog.lock().await;
-    println!("COMMAND REQUEST: Catalog installing jwpub...");
-    let path = app.dialog().file().blocking_pick_file().unwrap().path;
-    manager.install_publication(&path);   
-    println!("COMMAND DEBUG: Installing file `{}`", &path.display());
-    Ok(())    
-    }
+async fn pubcatalog_install_jwpub_file<'r>(manager: State<'r, PubManager>) -> Result<(), ()> {
+    todo!()
+}
 
 #[derive(Serialize, Deserialize)]
 struct PublicationList {
-    arrayof: Vec<jwpub::extension::Publication>
+    arrayof: Vec<publication::extension::Publication>
 }
 
 #[derive(Serialize, Deserialize)]
 struct ChapterList {
-    arrayof: Vec<jwpub::extension::Chapter>,
+    arrayof: Vec<publication::extension::Chapter>,
     msg: String
 }
 
@@ -87,49 +83,39 @@ fn pubcatalog_set_media_location<'r>(manager: State<'r, PubManager>, lang: Strin
   manager.set_media_location(&lang, &category, &pub_symbol);
 }
 
-/// Get available categories on catalog.
-#[tauri::command]
-fn pubcatalog_get_available_categories<'r>(manager: State<'r, PubManager>, lang: String) -> Vec<String> {
-    let manager = tauri::async_runtime::block_on(manager.catalog.lock());
-    println!("COMMAND REQUEST: Check categories... | Lang: {lang}");
-
-    manager.get_available_categories(lang)
-}
-
-// ----------------------------------------------------
-
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_window::init())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             pubcatalog_install_jwpub_file,
             pubcatalog_get_list_from,
             pubcatalog_get_summary_from,
             pubcatalog_get_chapter_content,
             pubcatalog_set_media_location,
-            pubcatalog_get_available_categories,
         ])
         .setup(|app| {
-            let main_window = app.get_window("main").unwrap();
+            let main_window = app.get_webview_window("main").unwrap();
             main_window.set_title("Open Witness Library");
+            println!("DEBUG: app data path is {}", app.path().local_data_dir().unwrap().join("open-witness-library").display());
             app.manage(PubManager { 
                 catalog: Mutex::new(
-                    jwpub::PubCatalog::new(
+                    publication::PubCatalog::new(
                         app.path().local_data_dir().unwrap()
                         .join("open-witness-library")))
                     }
                 );
             Ok(())
         })
-        .register_uri_scheme_protocol("jwpub-media", |app, req| {
-            println!("URI Request");
-            let request: Url = req.uri().parse().unwrap();
-            let image_request = request.host_str().unwrap();
+        .register_uri_scheme_protocol("jwpub-media", |ctx, req| {
+            println!("DEBUG: JWPUB_MEDIA Request");
+            let app = ctx.app_handle();
+            let request = req.uri();
+            let image_request = request.path().replace("/", "");
             let media_location = tauri::async_runtime::block_on(app.state::<PubManager>().catalog.lock()).media_location.clone();
+            println!("DEBUG: request parameters = {:?}", request);
+            println!("DEBUG: media requested = {:?}", image_request);
+            println!("DEBUG: media location = {:?}", media_location);
 
             let content: Vec<u8> = {
                 if let Ok(data) = fs::read(media_location.join(image_request)) {
@@ -139,40 +125,47 @@ pub fn run() {
                 }
             };
 
-            ResponseBuilder::new()
+            println!("DEBUG: media size = {:?}", content.len());
+
+            Response::builder()
                 .header("Origin", "*")
-                .mimetype("text/html")
+                .header("Content-Type","image/jpg")
                 .body(content)
+                .unwrap()
         }) // TODO: Refactor jwpub using discoveries from Document contents
         // TODO: Use MepsDocumentId table for opening other pub parts
-        .register_uri_scheme_protocol("jwpub", |app, req| {
+        .register_uri_scheme_protocol("jwpub", |ctx, req| {
             println!("Request to URI");
-            let request: Url = req.uri().parse().unwrap();
+            let app = ctx.app_handle();
+            let request = req.uri();
             // Uri will be valid if it is like this:
             // jwpub://localhost/language/category/pub 
             // Example: jwpub:///T/bk/lfb
-            let arguments = request.path_segments().map(|c| c.collect::<Vec<_>>()).unwrap();
+            let clean_path = request.path().replacen("/", "", 1);
+            let arguments: Vec<&str> = clean_path.split("/").collect();
             println!("{:#?}", arguments);
             if arguments.len() <= 3 {
-                let query: HashMap<String, String> = request.query_pairs().map(|i| (i.0.to_string(), i.1.to_string())).collect();
+                let query: HashMap<String, String> = request.query().unwrap().split("&").map(|i| (i.split("=").collect::<Vec<_>>()[0].to_string(), i.split("=").collect::<Vec<_>>()[1].to_string())).collect();
                 let pub_manager = app.state::<PubManager>();
                 let mut manager = tauri::async_runtime::block_on(pub_manager.catalog.lock());
 
                 if !query.is_empty() {
                     let content = manager.get_chapter_content(arguments[0].to_owned(), arguments[1].to_owned(), arguments[2].to_owned(), query.get("contentId").unwrap().parse::<i64>().unwrap_or_default()).content;
-                    ResponseBuilder::new()
+                    Response::builder()
                         .header("Access-Control-Allow-Origin", "*")
-                        .mimetype("text/html")
+                        .header("Content-Type","text/html")
                         .body(content.as_bytes().to_vec())
+                        .unwrap()
                 } else {
-                    ResponseBuilder::new()
+                    Response::builder()
                         .header("Access-Control-Allow-Origin", "*")
-                        .mimetype("application/json")
+                        .header("Content-Type","application/json")
                         .body(serde_json::to_value(manager.get_summary_from(arguments[0].to_owned(), arguments[1].to_owned(), arguments[2].to_owned()).unwrap())
                             .unwrap()
                             .to_string()
                             .as_bytes()
                             .to_vec())
+                        .unwrap()
                 }
             } else if arguments.len() >= 4 {
                 let pub_manager = app.state::<PubManager>();
@@ -180,21 +173,23 @@ pub fn run() {
 
                 if arguments[3] == "cover" {
                     let content = manager.get_cover_icon(arguments[0].to_owned(), arguments[1].to_owned(), arguments[2].to_owned());
-                    ResponseBuilder::new()
+                    Response::builder()
                         .header("Access-Control-Allow-Origin", "*")
-                        .mimetype("image/jpg")
+                        .header("Content-Type","image/jpg")
                         .body(content)
+                        .unwrap()
 
                 } else {
-                    ResponseBuilder::new()
+                    Response::builder()
                         .status(404)
                         .body(Vec::new())
+                        .unwrap()
                 }
             } else {
-                ResponseBuilder::new()
+                Response::builder()
                     .status(404)
                     .body(Vec::new())
-
+                    .unwrap()
             }
         })
         .run(tauri::generate_context!())

@@ -1,14 +1,16 @@
-use std::io;
 use std::fs;
+use std::io;
 use std::path::PathBuf;
 
-pub fn unpack_zip<R: std::io::Seek + std::io::Read>(mut archive: zip::ZipArchive<R>, destination: &PathBuf){
+pub fn unpack_zip<R: std::io::Seek + std::io::Read>(
+    mut archive: zip::ZipArchive<R>,
+    destination: &PathBuf,
+) {
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).unwrap();
         let outpath = match file.enclosed_name() {
             Some(path) => destination.join(path),
             None => continue,
-            
         };
 
         {
@@ -46,7 +48,5 @@ pub fn unpack_zip<R: std::io::Seek + std::io::Read>(mut archive: zip::ZipArchive
                 fs::set_permissions(&outpath, fs::Permissions::from_mode(mode)).unwrap();
             }
         }
-
     }
-
 }

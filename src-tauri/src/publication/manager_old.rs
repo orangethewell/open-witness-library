@@ -3,7 +3,6 @@
 use super::extension::{Chapter, ChapterContent, Publication};
 use inflate::inflate_bytes_zlib;
 use serde_json::Value;
-use sqlite;
 use std::{
     collections::HashMap,
     fs,
@@ -258,27 +257,27 @@ impl PubCatalog {
         let pub_directory = self.normalize_request_directory(&lang, &category, &pub_symbol);
         let manifest = self.populate_manifest(&pub_directory).unwrap();
 
-        if let Ok(connection) = sqlite::open(&pub_directory.join(PathBuf::from_iter([
-            "content",
-            manifest["publication"]["fileName"].as_str().unwrap(),
-        ]))) {
-            let mut cursor = connection.prepare("SELECT documentId, Class, sectionNumber, title, contextTitle, chapterNumber FROM document").unwrap().into_cursor();
-            let mut summary: Vec<Chapter> = vec![];
+        // if let Ok(connection) = sqlite::open(&pub_directory.join(PathBuf::from_iter([
+        //     "content",
+        //     manifest["publication"]["fileName"].as_str().unwrap(),
+        // ]))) {
+        //     let mut cursor = connection.prepare("SELECT documentId, Class, sectionNumber, title, contextTitle, chapterNumber FROM document").unwrap().into_cursor();
+        //     let mut summary: Vec<Chapter> = vec![];
 
-            while let Some(Ok(row)) = cursor.next() {
-                let new_chapter = Chapter {
-                    id: row.get::<i64, _>(0),
-                    class: 0,
-                    section: row.get::<i64, _>(2),
-                    title: row.get::<String, _>(3),
-                    context_title: row.get::<Option<String>, _>(4).unwrap_or("".to_string()),
-                    number: row.get::<Option<i64>, _>(5).unwrap_or(-1),
-                };
-                summary.push(new_chapter);
-            }
+        //     while let Some(Ok(row)) = cursor.next() {
+        //         let new_chapter = Chapter {
+        //             id: row.get::<i64, _>(0),
+        //             class: 0,
+        //             section: row.get::<i64, _>(2),
+        //             title: row.get::<String, _>(3),
+        //             context_title: row.get::<Option<String>, _>(4).unwrap_or("".to_string()),
+        //             number: row.get::<Option<i64>, _>(5).unwrap_or(-1),
+        //         };
+        //         summary.push(new_chapter);
+        //     }
 
-            return Ok(summary);
-        }
+        //     return Ok(summary);
+        // }
 
         Err(())
     }
@@ -296,52 +295,52 @@ impl PubCatalog {
         let pub_directory = self.normalize_request_directory(&lang, &category, &pub_symbol);
         let manifest = self.populate_manifest(&pub_directory).unwrap();
 
-        if let Ok(connection) = sqlite::open(&pub_directory.join(PathBuf::from_iter([
-            "content",
-            manifest["publication"]["fileName"].as_str().unwrap(),
-        ]))) {
-            let mut cursor = connection
-                .prepare("SELECT content FROM document WHERE documentId=?")
-                .unwrap()
-                .into_cursor()
-                .bind(&[sqlite::Value::Integer(chapter_id)])
-                .unwrap();
+        // if let Ok(connection) = sqlite::open(&pub_directory.join(PathBuf::from_iter([
+        //     "content",
+        //     manifest["publication"]["fileName"].as_str().unwrap(),
+        // ]))) {
+        //     let mut cursor = connection
+        //         .prepare("SELECT content FROM document WHERE documentId=?")
+        //         .unwrap()
+        //         .into_cursor()
+        //         .bind(&[sqlite::Value::Integer(chapter_id)])
+        //         .unwrap();
 
-            while let Some(Ok(row)) = cursor.next() {
-                let encrypted_content = row.get::<Vec<u8>, _>(0);
-                let master_key: Vec<u8>;
-                let master_key = self
-                    .cached_key
-                    .get(&pub_symbol)
-                    .cloned()
-                    .unwrap_or_else(|| {
-                        let key = self.forge_master_key(&pub_directory);
-                        self.cached_key.insert(pub_symbol.clone(), key.clone());
-                        key
-                    });
-                let (key, iv) = master_key.split_at(16);
+        //     while let Some(Ok(row)) = cursor.next() {
+        //         let encrypted_content = row.get::<Vec<u8>, _>(0);
+        //         let master_key: Vec<u8>;
+        //         let master_key = self
+        //             .cached_key
+        //             .get(&pub_symbol)
+        //             .cloned()
+        //             .unwrap_or_else(|| {
+        //                 let key = self.forge_master_key(&pub_directory);
+        //                 self.cached_key.insert(pub_symbol.clone(), key.clone());
+        //                 key
+        //             });
+        //         let (key, iv) = master_key.split_at(16);
 
-                let decrypted_content =
-                    inflate_bytes_zlib(&decrypt_aes_128_cbc(key, iv, &encrypted_content)).unwrap();
+        //         let decrypted_content =
+        //             inflate_bytes_zlib(&decrypt_aes_128_cbc(key, iv, &encrypted_content)).unwrap();
 
-                let content = String::from_utf8_lossy(&decrypted_content).to_string();
-                return ChapterContent {
-                    content,
-                    next_exists: self.next_chapter_exists(
-                        &lang,
-                        &category,
-                        &pub_symbol,
-                        chapter_id,
-                    ),
-                    previous_exists: self.previous_chapter_exists(
-                        &lang,
-                        &category,
-                        &pub_symbol,
-                        chapter_id,
-                    ),
-                };
-            }
-        }
+        //         let content = String::from_utf8_lossy(&decrypted_content).to_string();
+        //         return ChapterContent {
+        //             content,
+        //             next_exists: self.next_chapter_exists(
+        //                 &lang,
+        //                 &category,
+        //                 &pub_symbol,
+        //                 chapter_id,
+        //             ),
+        //             previous_exists: self.previous_chapter_exists(
+        //                 &lang,
+        //                 &category,
+        //                 &pub_symbol,
+        //                 chapter_id,
+        //             ),
+        //         };
+        //     }
+        // }
 
         ChapterContent {
             content: "".to_owned(),
@@ -387,27 +386,27 @@ impl PubCatalog {
         let pub_directory = self.normalize_request_directory(&lang, &category, &pub_symbol);
         let manifest = self.populate_manifest(&pub_directory).unwrap();
 
-        if let Ok(connection) = sqlite::open(&pub_directory.join(PathBuf::from_iter([
-            "content",
-            manifest["publication"]["fileName"].as_str().unwrap(),
-        ]))) {
-            let mut cursor = connection
-                .prepare("SELECT publicationId FROM document WHERE documentId=?")
-                .unwrap()
-                .into_cursor()
-                .bind(&[sqlite::Value::Integer(chapter_id + 1)])
-                .unwrap();
+        // if let Ok(connection) = sqlite::open(&pub_directory.join(PathBuf::from_iter([
+        //     "content",
+        //     manifest["publication"]["fileName"].as_str().unwrap(),
+        // ]))) {
+        //     let mut cursor = connection
+        //         .prepare("SELECT publicationId FROM document WHERE documentId=?")
+        //         .unwrap()
+        //         .into_cursor()
+        //         .bind(&[sqlite::Value::Integer(chapter_id + 1)])
+        //         .unwrap();
 
-            while let Some(Ok(row)) = cursor.next() {
-                let publication_id = row.get::<i64, _>(0);
+        //     while let Some(Ok(row)) = cursor.next() {
+        //         let publication_id = row.get::<i64, _>(0);
 
-                if publication_id == 1 {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        }
+        //         if publication_id == 1 {
+        //             return true;
+        //         } else {
+        //             return false;
+        //         }
+        //     }
+        // }
         false
     }
 
@@ -421,27 +420,27 @@ impl PubCatalog {
         let pub_directory = self.normalize_request_directory(&lang, &category, &pub_symbol);
         let manifest = self.populate_manifest(&pub_directory).unwrap();
 
-        if let Ok(connection) = sqlite::open(&pub_directory.join(PathBuf::from_iter([
-            "content",
-            manifest["publication"]["fileName"].as_str().unwrap(),
-        ]))) {
-            let mut cursor = connection
-                .prepare("SELECT publicationId FROM document WHERE documentId=?")
-                .unwrap()
-                .into_cursor()
-                .bind(&[sqlite::Value::Integer(chapter_id - 1)])
-                .unwrap();
+        // if let Ok(connection) = sqlite::open(&pub_directory.join(PathBuf::from_iter([
+        //     "content",
+        //     manifest["publication"]["fileName"].as_str().unwrap(),
+        // ]))) {
+        //     let mut cursor = connection
+        //         .prepare("SELECT publicationId FROM document WHERE documentId=?")
+        //         .unwrap()
+        //         .into_cursor()
+        //         .bind(&[sqlite::Value::Integer(chapter_id - 1)])
+        //         .unwrap();
 
-            while let Some(Ok(row)) = cursor.next() {
-                let publication_id = row.get::<i64, _>(0);
+        //     while let Some(Ok(row)) = cursor.next() {
+        //         let publication_id = row.get::<i64, _>(0);
 
-                if publication_id == 1 {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        }
+        //         if publication_id == 1 {
+        //             return true;
+        //         } else {
+        //             return false;
+        //         }
+        //     }
+        // }
         false
     }
 
@@ -473,49 +472,49 @@ impl PubCatalog {
     }
 
     fn forge_master_key(&self, pub_directory: &PathBuf) -> Vec<u8> {
-        let connection = sqlite::open(
-            pub_directory.join(PathBuf::from_iter([
-                "content",
-                self.populate_manifest(pub_directory).unwrap()["publication"]["fileName"]
-                    .as_str()
-                    .unwrap(),
-            ])),
-        )
-        .unwrap();
+        // let connection = sqlite::open(
+        //     pub_directory.join(PathBuf::from_iter([
+        //         "content",
+        //         self.populate_manifest(pub_directory).unwrap()["publication"]["fileName"]
+        //             .as_str()
+        //             .unwrap(),
+        //     ])),
+        // )
+        // .unwrap();
 
-        let mut cursor = connection
-            .prepare("SELECT MepsLanguageIndex, Symbol, Year, IssueTagNumber FROM Publication")
-            .unwrap()
-            .into_cursor();
-        let (mut meps_language_index, mut year): (i64, i64) = (0, 0);
-        let (mut symbol, mut issue_tag_number): (String, String) = (String::new(), String::new());
-        while let Some(Ok(row)) = cursor.next() {
-            meps_language_index = row.get::<i64, _>(0);
-            symbol = row.get::<String, _>(1);
-            year = row.get::<i64, _>(2);
-            issue_tag_number = row.get::<String, _>(3);
-        }
+        // let mut cursor = connection
+        //     .prepare("SELECT MepsLanguageIndex, Symbol, Year, IssueTagNumber FROM Publication")
+        //     .unwrap()
+        //     .into_cursor();
+        // let (mut meps_language_index, mut year): (i64, i64) = (0, 0);
+        // let (mut symbol, mut issue_tag_number): (String, String) = (String::new(), String::new());
+        // while let Some(Ok(row)) = cursor.next() {
+        //     meps_language_index = row.get::<i64, _>(0);
+        //     symbol = row.get::<String, _>(1);
+        //     year = row.get::<i64, _>(2);
+        //     issue_tag_number = row.get::<String, _>(3);
+        // }
 
-        let key_string = if issue_tag_number == "0" {
-            String::from(format!("{}_{}_{}", meps_language_index, symbol, year))
-        } else {
-            String::from(format!(
-                "{}_{}_{}_{}",
-                meps_language_index, symbol, year, issue_tag_number
-            ))
-        };
+        // let key_string = if issue_tag_number == "0" {
+        //     String::from(format!("{}_{}_{}", meps_language_index, symbol, year))
+        // } else {
+        //     String::from(format!(
+        //         "{}_{}_{}_{}",
+        //         meps_language_index, symbol, year, issue_tag_number
+        //     ))
+        // };
 
-        let key_part1 = sha256(key_string.as_bytes());
-        let key_part2 =
-            hex::decode("11cbb5587e32846d4c26790c633da289f66fe5842a3a585ce1bc3a294af5ada7")
-                .unwrap();
+        // let key_part1 = sha256(key_string.as_bytes());
+        // let key_part2 =
+        //     hex::decode("11cbb5587e32846d4c26790c633da289f66fe5842a3a585ce1bc3a294af5ada7")
+        //         .unwrap();
 
-        let master_key: Vec<u8> = key_part1
-            .iter()
-            .zip(key_part2)
-            .map(|(x, y)| x ^ y)
-            .collect();
-        println!("{:#?}", master_key.len());
-        master_key
+        // let master_key: Vec<u8> = key_part1
+        //     .iter()
+        //     .zip(key_part2)
+        //     .map(|(x, y)| x ^ y)
+        //     .collect();
+        // println!("{:#?}", master_key.len());
+        "master_key".as_bytes().to_vec()
     }
 }

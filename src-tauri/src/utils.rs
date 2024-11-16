@@ -2,8 +2,10 @@ use std::fs;
 use std::io;
 use std::path::PathBuf;
 
+use zip::ZipArchive;
+
 pub fn unpack_zip<R: std::io::Seek + std::io::Read>(
-    mut archive: zip::ZipArchive<R>,
+    mut archive: ZipArchive<R>,
     destination: &PathBuf,
 ) {
     for i in 0..archive.len() {

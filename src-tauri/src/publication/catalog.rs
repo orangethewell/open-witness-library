@@ -1,6 +1,7 @@
 use std::{fs, io::{self, Cursor, Read}, path::PathBuf};
 
 use rusqlite::Connection;
+use serde::{Deserialize, Serialize};
 use zip::ZipArchive;
 
 use crate::utils::unpack_zip;
@@ -12,6 +13,7 @@ pub struct Catalog {
     catalog_db: Connection,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct PublicationDisplay {
     pub id: i32,
     
@@ -68,8 +70,8 @@ impl Catalog {
                 issue_cover_title TEXT,
                 
                 icon_path TEXT,
-                categories TEXT NOT NULL,
-                attributes TEXT NOT NULL,
+                categories JSON NOT NULL DEFAULT('[]'),
+                attributes JSON NOT NULL DEFAULT('[]'),
             )", 
             ()
         )?;
@@ -107,7 +109,7 @@ impl Catalog {
                 ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
             )",
             (
-                name, symbol, hash, timestamp, language_idx, year, title, short_title, issue_number, issue_id, issue_title, issue_cover_title, icon_path, categories.join(","), attributes.join(","),
+                name, symbol, hash, timestamp, language_idx, year, title, short_title, issue_number, issue_id, issue_title, issue_cover_title, icon_path, serde_json::to_value(categories)?, serde_json::to_value(attributes)?,
             ),
         )?;
 
@@ -136,6 +138,34 @@ impl Catalog {
 
         unpack_zip(content_package, &location);
         Ok(())
+    }
+
+    pub fn get_list_from_category(&self, category: &str) -> Result<Vec<PublicationDisplay>, Box<dyn std::error::Error>> {
+        let mut stmt = self.catalog_db.prepare("SELECT * FROM publications WHERE categories LIKE ?")?;
+        let mut rows = stmt.query([format!("%{}%", category)])?;
+        let mut result = Vec::new();
+        while let Some(row) = rows.next()? {
+            result.push(PublicationDisplay {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                symbol: row.get(2)?,
+                hash: row.get(3)?,
+                timestamp: row.get(4)?,
+                language_idx: row.get(5)?,
+                year: row.get(6)?,
+                title: row.get(7)?,
+                short_title: row.get(8)?,
+                issue_number: row.get(9)?,
+                issue_id: row.get(10)?,
+                issue_title: row.get(11)?,
+                issue_cover_title: row.get(12)?,
+                icon_path: row.get(13)?,
+                categories: serde_json::from_value(row.get(14)?)?,
+                attributes: serde_json::from_value(row.get(15)?)?,
+            })
+        }
+
+        Ok(result)
     }
 }
 

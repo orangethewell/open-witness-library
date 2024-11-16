@@ -25,7 +25,7 @@ serde_json = "1"
 
 # Application Deps 
 zip = "2.2.0"
-rusqlite = { version = "0.32.1", features = ["bundled", "chrono"] }
+rusqlite = { version = "0.32.1", features = ["bundled", "chrono", "serde_json"] }
 chrono = "0.4.38"
 typenum = "1.17.0"
 sha2 = "0.10"

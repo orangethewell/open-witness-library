@@ -9,9 +9,23 @@ use sha2::{Sha256, Digest};
 
 use super::tables::*;
 
-#[derive(Hash, Eq, PartialEq)]
+#[derive(Hash, Eq, PartialEq, Copy, Clone)]
 pub enum ContentTables {
-    Document
+    Document,
+    // Other aren't implemented
+    DatedText,
+    Endnote,
+    Extract,
+    ExtractMultimedia,
+    Multimedia,
+    Footnote,
+    ParagraphCommentary,
+    Question,
+    SearchIndexBibleVerse,
+    SearchIndexDocument,
+    SearchTextRangeBibleVerse,
+    SearchTextRangeDocument,
+    VerseCommentary,
 }
 
 pub struct Publication {
@@ -157,6 +171,25 @@ impl Publication {
             });
         }
         Ok(document)
+    }
+
+    pub fn get_content_text_from(&mut self, content_table: ContentTables, id: i32) -> Result<Option<String>, Box<dyn std::error::Error>>{
+        if let Some(content) = self.decrypted_content_cache.get(&(content_table, id)) {
+            return Ok(Some(content.clone()))
+        }
+
+        match content_table {
+            ContentTables::Document => {
+                if let Some(document) = self.get_document_by_id(id)? {
+                    let content = self.decrypt_content(document.content)?;
+                    self.decrypted_content_cache.put((ContentTables::Document, id), content.clone());
+                    Ok(Some(content))
+                } else {
+                    Ok(None)
+                }
+            }
+            _ => Err("Unsupported content table or not implemented yet".into())
+        }
     }
 
     pub fn decrypt_content(&self, content: Vec<u8>) -> Result<String, Box<dyn std::error::Error>> {

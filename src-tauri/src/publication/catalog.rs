@@ -1,22 +1,31 @@
-use std::{fs, io::{self, Cursor, Read}, path::PathBuf};
+use std::{
+    fs, io::{self, Cursor, Read}, num::NonZero, path::PathBuf
+};
 
+use colored::Colorize;
+use lru::LruCache;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use zip::ZipArchive;
 
 use crate::utils::unpack_zip;
 
-use super::Manifest;
+use super::{Publication, Manifest};
+
+const TARGET: &'static str = "Catalog";
 
 pub struct Catalog {
     pub_path: PathBuf,
     catalog_db: Connection,
+
+    current_open: String,
+    publication_cache: LruCache<String, Publication>
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct PublicationDisplay {
     pub id: i32,
-    
+
     /// File path name for Catalog
     pub name: String,
     pub symbol: String,
@@ -25,16 +34,16 @@ pub struct PublicationDisplay {
     pub timestamp: String,
     pub language_idx: i32, // Can be ignored, since we don't have all language indices
     pub year: i32,
-    
+
     pub title: String,
     pub short_title: String,
-    
+
     /// Used for sorting, since first came last
     pub issue_number: i32,
     pub issue_id: i32,
     pub issue_title: String,
     pub issue_cover_title: String,
-    
+
     pub icon_path: String,
     pub categories: Vec<String>,
     pub attributes: Vec<String>,
@@ -42,14 +51,16 @@ pub struct PublicationDisplay {
 
 impl Catalog {
     pub fn init<T: Into<PathBuf>>(location: T) -> Result<Self, Box<dyn std::error::Error>> {
-        let location = location.into();
+        debug!(target: TARGET, "Initializing catalog...");
+        let location: PathBuf = location.into();
         if !location.exists() {
             fs_extra::dir::create_all(&location, false)?;
+            info!(target: TARGET, "Creating catalog location...");
         }
 
         let db = Connection::open(location.join("catalog.db"))?;
         db.execute(
-        "CREATE TABLE IF NOT EXISTS publications (
+            "CREATE TABLE IF NOT EXISTS publications (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 
@@ -72,13 +83,17 @@ impl Catalog {
                 icon_path TEXT,
                 categories JSON NOT NULL DEFAULT('[]'),
                 attributes JSON NOT NULL DEFAULT('[]'),
-            )", 
-            ()
+            )",
+            (),
         )?;
 
-        Ok(Self { 
-            pub_path: location, 
-            catalog_db: db 
+        debug!(target: TARGET, "Catalog initialized at {}!", location.display().to_string().green());
+
+        Ok(Self {
+            pub_path: location,
+            catalog_db: db,
+            current_open: String::new(),
+            publication_cache: LruCache::new(NonZero::new(5).unwrap()),
         })
     }
 
@@ -115,8 +130,11 @@ impl Catalog {
 
         Ok(())
     }
-    
-    pub fn install_jwpub_file<T: Into<PathBuf>>(&self, file_path: T) -> Result<(), Box<dyn std::error::Error>> {
+
+    pub fn install_jwpub_file<T: Into<PathBuf>>(
+        &self,
+        file_path: T,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Check manifest for valid .JWPUB;
         let file_path: PathBuf = file_path.into();
         let package = fs::File::open(file_path)?;
@@ -125,7 +143,7 @@ impl Catalog {
 
         let manifest = get_metadata_from_archive(&mut package)?;
         let pub_pathname = manifest.name.replace(".jwpub", "");
-        
+
         let location = self.pub_path.join(pub_pathname);
         if !location.exists() {
             fs_extra::dir::create_all(&location, false)?;
@@ -140,8 +158,13 @@ impl Catalog {
         Ok(())
     }
 
-    pub fn get_list_from_category(&self, category: &str) -> Result<Vec<PublicationDisplay>, Box<dyn std::error::Error>> {
-        let mut stmt = self.catalog_db.prepare("SELECT * FROM publications WHERE categories LIKE ?")?;
+    pub fn get_list_from_category(
+        &self,
+        category: &str,
+    ) -> Result<Vec<PublicationDisplay>, Box<dyn std::error::Error>> {
+        let mut stmt = self
+            .catalog_db
+            .prepare("SELECT * FROM publications WHERE categories LIKE ?")?;
         let mut rows = stmt.query([format!("%{}%", category)])?;
         let mut result = Vec::new();
         while let Some(row) = rows.next()? {
@@ -167,9 +190,23 @@ impl Catalog {
 
         Ok(result)
     }
+
+    pub fn open_publication_connection(&mut self, name: String) -> Result<(), Box<dyn std::error::Error>> {
+        let location = self.pub_path.join(&name);
+        if let Some(_publication) = self.publication_cache.get(&name) {
+            self.current_open = name.clone();
+            Ok(())
+        } else {
+            let publication = Publication::from_path(location, &name)?;
+            self.publication_cache.put(name, publication);
+            Ok(())
+        }
+    }
 }
 
-pub fn get_metadata_from_archive(pub_archive: &mut ZipArchive<io::BufReader<fs::File>>) -> Result<Manifest, serde_json::Error> {
+pub fn get_metadata_from_archive(
+    pub_archive: &mut ZipArchive<io::BufReader<fs::File>>,
+) -> Result<Manifest, serde_json::Error> {
     let mut manifest_file = pub_archive.by_name("manifest.json").unwrap();
     let mut manifest_data = String::new();
     manifest_file.read_to_string(&mut manifest_data).unwrap();

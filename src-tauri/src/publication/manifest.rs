@@ -27,9 +27,10 @@ pub struct Publication {
     pub issue_id: u32,
     pub issue_number: u32,
     pub publication_type: String,
-    pub root_symbol: String,
+    pub symbol: String,
     pub images: Vec<Image>,
     pub categories: Vec<String>,
+    pub attributes: Vec<String>,
     pub issue_properties: IssueProperties,
 }
 

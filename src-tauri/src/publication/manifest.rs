@@ -6,12 +6,12 @@ pub struct Manifest {
     pub name: String,
     pub hash: String,
     pub timestamp: String,
-    pub version: u32,
-    pub expanded_size: u32,
+    pub version: i32,
+    pub expanded_size: i32,
     pub content_format: String,
     pub html_validated: bool,
     pub meps_platform_version: f32,
-    pub meps_build_number: u32,
+    pub meps_build_number: i32,
     pub publication: Publication,
 }
 
@@ -22,14 +22,15 @@ pub struct Publication {
     pub short_title: String,
     pub display_title: String,
     pub reference_title: String,
-    pub language: u32,
-    pub year: u32,
-    pub issue_id: u32,
-    pub issue_number: u32,
+    pub language: i32,
+    pub year: i32,
+    pub issue_id: i32,
+    pub issue_number: i32,
     pub publication_type: String,
-    pub root_symbol: String,
+    pub symbol: String,
     pub images: Vec<Image>,
     pub categories: Vec<String>,
+    pub attributes: Vec<String>,
     pub issue_properties: IssueProperties,
 }
 
@@ -39,8 +40,8 @@ pub struct Image {
     pub file_name: String,
     pub image_type: String,
     pub attribute: String,
-    pub width: u32,
-    pub height: u32,
+    pub width: i32,
+    pub height: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

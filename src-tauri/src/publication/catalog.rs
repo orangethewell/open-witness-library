@@ -17,6 +17,7 @@ pub struct PublicationDisplay {
     
     /// File path name for Catalog
     pub name: String,
+    pub symbol: String,
 
     pub hash: String,
     pub timestamp: String,
@@ -29,6 +30,7 @@ pub struct PublicationDisplay {
     /// Used for sorting, since first came last
     pub issue_number: i32,
     pub issue_id: i32,
+    pub issue_title: String,
     pub issue_cover_title: String,
     
     pub icon_path: String,
@@ -46,9 +48,10 @@ impl Catalog {
         let db = Connection::open(location.join("catalog.db"))?;
         db.execute(
         "CREATE TABLE IF NOT EXISTS publications (
-                id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 
                 name TEXT NOT NULL,
+                symbol TEXT NOT NULL,
                 hash TEXT NOT NULL,
                 timestamp DATETIME NOT NULL,
                 language_idx INTEGER NOT NULL,
@@ -59,11 +62,12 @@ impl Catalog {
 
                 issue_number INTEGER DEFAULT 0,
                 issue_id INTEGER DEFAULT 0,
-                issue_cover_title TEXT
+                issue_title TEXT,
+                issue_cover_title TEXT,
                 
-                icon_path TEXT
-                categories TEXT NOT NULL
-                attributes TEXT NOT NULL
+                icon_path TEXT,
+                categories TEXT NOT NULL,
+                attributes TEXT NOT NULL,
             )", 
             ()
         )?;
@@ -76,8 +80,8 @@ impl Catalog {
 
     pub fn insert_publication_to_catalog(
         &self,
-        id: i32,
         name: &str,
+        symbol: &str,
         hash: &str,
         timestamp: &str,
         language_idx: i32,
@@ -86,19 +90,20 @@ impl Catalog {
         short_title: &str,
         issue_number: i32,
         issue_id: i32,
+        issue_title: &str,
         issue_cover_title: &str,
         icon_path: &str,
-        categories: Vec<&str>,
-        attributes: Vec<&str>,
+        categories: &Vec<String>,
+        attributes: &Vec<String>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "INSERT INTO publications (
-                id, name, hash, timestamp, language_idx, year, title, short_title, issue_number, issue_id, issue_cover_title, icon_path, categories, attributes
+                name, symbol, hash, timestamp, language_idx, year, title, short_title, issue_number, issue_id, issue_title, issue_cover_title, icon_path, categories, attributes
             ) VALUES (
-                ?,?,?,?,?,?,?,?,?,?,?,?,?,?
+                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
             )",
             (
-                id, name, hash, timestamp, language_idx, year, title, short_title, issue_number, issue_id, issue_cover_title, icon_path, categories.join(","), attributes.join(","),
+                name, symbol, hash, timestamp, language_idx, year, title, short_title, issue_number, issue_id, issue_title, issue_cover_title, icon_path, categories.join(","), attributes.join(","),
             ),
         )?;
 
@@ -106,19 +111,50 @@ impl Catalog {
     }
     
     pub fn install_jwpub_file<T: Into<PathBuf>>(&self, file_path: T) -> Result<(), Box<dyn std::error::Error>> {
+        // Check manifest for valid .JWPUB;
         let file_path: PathBuf = file_path.into();
         let package = fs::File::open(file_path)?;
         let reader = io::BufReader::new(package);
         let mut package = ZipArchive::new(reader)?;
 
         let manifest = get_metadata_from_archive(&mut package)?;
-
         let pub_pathname = manifest.name.replace(".jwpub", "");
-        
-        let location = self.pub_path.join(pub_pathname);
+
+        // Add to directory and to catalog
+        let location = self.pub_path.join(&pub_pathname);
         if !location.exists() {
             fs_extra::dir::create_all(&location, false)?;
         }
+
+        let symbol = if manifest.publication.issue_properties.symbol == "" {
+            manifest.publication.symbol
+        } else {
+            manifest.publication.issue_properties.symbol
+        };
+
+        let icon_path = if manifest.publication.images.len() > 0 {
+            location.join( &manifest.publication.images[0].file_name).to_str().unwrap().to_string()
+        } else {
+            "publication.png".to_string()
+        };
+
+        self.insert_publication_to_catalog(
+            &pub_pathname, 
+            &symbol, 
+            &manifest.hash, 
+            &manifest.timestamp, 
+            manifest.publication.language, 
+            manifest.publication.year,
+            &manifest.publication.title, 
+            &manifest.publication.short_title, 
+            manifest.publication.issue_number, 
+            manifest.publication.issue_id,
+            &manifest.publication.issue_properties.title, 
+            &manifest.publication.issue_properties.cover_title, 
+            &icon_path, 
+            &manifest.publication.categories, 
+            &manifest.publication.attributes,
+        )?;
 
         let mut content_file = package.by_name("contents")?;
         let mut content_data = Vec::<u8>::new();

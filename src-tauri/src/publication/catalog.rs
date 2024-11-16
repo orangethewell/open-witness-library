@@ -49,8 +49,10 @@ impl Catalog {
         db.execute(
         "CREATE TABLE IF NOT EXISTS publications (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 
                 name TEXT NOT NULL,
+                symbol TEXT NOT NULL,
                 symbol TEXT NOT NULL,
                 hash TEXT NOT NULL,
                 timestamp DATETIME NOT NULL,
@@ -99,7 +101,9 @@ impl Catalog {
         self.catalog_db.execute(
             "INSERT INTO publications (
                 name, symbol, hash, timestamp, language_idx, year, title, short_title, issue_number, issue_id, issue_title, issue_cover_title, icon_path, categories, attributes
+                name, symbol, hash, timestamp, language_idx, year, title, short_title, issue_number, issue_id, issue_title, issue_cover_title, icon_path, categories, attributes
             ) VALUES (
+                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
                 ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
             )",
             (
@@ -119,42 +123,11 @@ impl Catalog {
 
         let manifest = get_metadata_from_archive(&mut package)?;
         let pub_pathname = manifest.name.replace(".jwpub", "");
-
-        // Add to directory and to catalog
-        let location = self.pub_path.join(&pub_pathname);
+        
+        let location = self.pub_path.join(pub_pathname);
         if !location.exists() {
             fs_extra::dir::create_all(&location, false)?;
         }
-
-        let symbol = if manifest.publication.issue_properties.symbol == "" {
-            manifest.publication.symbol
-        } else {
-            manifest.publication.issue_properties.symbol
-        };
-
-        let icon_path = if manifest.publication.images.len() > 0 {
-            location.join( &manifest.publication.images[0].file_name).to_str().unwrap().to_string()
-        } else {
-            "publication.png".to_string()
-        };
-
-        self.insert_publication_to_catalog(
-            &pub_pathname, 
-            &symbol, 
-            &manifest.hash, 
-            &manifest.timestamp, 
-            manifest.publication.language, 
-            manifest.publication.year,
-            &manifest.publication.title, 
-            &manifest.publication.short_title, 
-            manifest.publication.issue_number, 
-            manifest.publication.issue_id,
-            &manifest.publication.issue_properties.title, 
-            &manifest.publication.issue_properties.cover_title, 
-            &icon_path, 
-            &manifest.publication.categories, 
-            &manifest.publication.attributes,
-        )?;
 
         let mut content_file = package.by_name("contents")?;
         let mut content_data = Vec::<u8>::new();

@@ -12,11 +12,11 @@ pub struct Manifest {
     pub html_validated: bool,
     pub meps_platform_version: f32,
     pub meps_build_number: i32,
-    pub publication: Publication,
+    pub publication: PublicationManifest,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Publication {
+pub struct PublicationManifest {
     pub file_name: String,
     pub title: String,
     pub short_title: String,

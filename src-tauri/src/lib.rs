@@ -10,6 +10,12 @@ use tauri::async_runtime::Mutex;
 use tauri::{http::Response, Manager, State};
 use url::Url;
 
+use tauri_plugin_log::fern::colors::{ColoredLevelConfig, Color};
+
+#[macro_use]
+extern crate log;
+use colored::Colorize;
+
 struct PubManager {
     catalog: Mutex<publication::PubCatalog>,
 }
@@ -108,9 +114,26 @@ fn pubcatalog_set_media_location<'r>(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let mut colors = ColoredLevelConfig::default()
+        .info(Color::Blue)
+        .debug(Color::Green)
+        .trace(Color::Cyan);
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_log::Builder::new()
+            .format(move |out, message, record| {
+                out.finish(format_args!(
+                    "{} - [{}][{}] {}",
+                    chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+                    colors.color(record.level()),
+                    {if record.target().len() > 0 {record.target()} else {"open-witness-library"}}.magenta(),
+                    message
+                ))
+            })
+            .build()
+        )
         .invoke_handler(tauri::generate_handler![
             pubcatalog_install_jwpub_file,
             pubcatalog_get_list_from,
@@ -121,13 +144,16 @@ pub fn run() {
         .setup(|app| {
             let main_window = app.get_webview_window("main").unwrap();
             main_window.set_title("Open Witness Library");
-            println!(
-                "DEBUG: app data path is {}",
+            debug!(
+                target: "open-witness-library",
+                "app data path is {}",
                 app.path()
                     .local_data_dir()
                     .unwrap()
                     .join("open-witness-library")
                     .display()
+                    .to_string()
+                    .green()
             );
             app.manage(PubManager {
                 catalog: Mutex::new(publication::PubCatalog::new(

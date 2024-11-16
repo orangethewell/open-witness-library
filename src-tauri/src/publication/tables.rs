@@ -1,74 +1,76 @@
 use chrono::NaiveDateTime;
+use serde::{Serialize, Deserialize};
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Document {
     // Primary key
-    id: i32,
+    pub id: i32,
 
     // Foreign key to `PublicationMeta` table
-    publication_id: i32,
+    pub publication_id: i32,
 
     // MEPS helpers
-    meps_document_id: i32,
-    meps_language_id: i32,
-    
-    class: i32,
-    type_id: i32,
-    section_number: i32,
-    chapter_number: i32,
+    pub meps_document_id: i32,
+    pub meps_language_id: i32,
+
+    pub class: i32,
+    pub type_id: i32,
+    pub section_number: i32,
+    pub chapter_number: i32,
 
     // -------------------------------------------
-    title: String,
-    title_rich: Option<String>,
+    pub title: String,
+    pub title_rich: Option<String>,
 
-    toc_title: String,
-    toc_title_rich: Option<String>,
+    pub toc_title: String,
+    pub toc_title_rich: Option<String>,
 
-    context_title: Option<String>,
-    context_title_rich: Option<String>,
+    pub context_title: Option<String>,
+    pub context_title_rich: Option<String>,
 
-    feature_title: Option<String>,
-    feature_title_rich: Option<String>,
+    pub feature_title: Option<String>,
+    pub feature_title_rich: Option<String>,
 
-    subtitle: Option<String>,
-    subtitle_rich: Option<String>,
+    pub subtitle: Option<String>,
+    pub subtitle_rich: Option<String>,
 
-    feature_subtitle: Option<String>,
-    feature_subtitle_rich: Option<String>,
+    pub feature_subtitle: Option<String>,
+    pub feature_subtitle_rich: Option<String>,
     // -------------------------------------------
     // Content is a symmetric encrypted inflated file
-    content: Vec<u8>,
+    pub content: Vec<u8>,
 
     // -------------------------------------------
-    first_footnote_id: Option<i32>,
-    last_footnote_id: Option<i32>,
-    first_bible_citation_id: Option<i32>,
-    last_bible_citation_id: Option<i32>,
+    pub first_footnote_id: Option<i32>,
+    pub last_footnote_id: Option<i32>,
+    pub first_bible_citation_id: Option<i32>,
+    pub last_bible_citation_id: Option<i32>,
     // -------------------------------------------
     // Flags, can be used for conditional rendering.
     // For example, if `has_media_links` or `has_links`
-    // are set to true, the document will be rendered 
+    // are set to true, the document will be rendered
     // and all links will pass through `convertFileSrc()`
     // function and other hooks would be executed. If
     // false, it will have less overhead.
-    paragraph_count: i32,
-    
-    has_media_links: bool,
-    has_links: bool,
-    
-    first_page_number: i32,
-    last_page_number: i32,
-    
-    content_length: i32,
-    
-    preferred_presentation: Option<String>, // TODO: Check other publications, probably refers to full page or html display
-    content_reworked_date: Option<String>,
-    
-    has_pronunciation_guide: bool
+    pub paragraph_count: i32,
+
+    pub has_media_links: bool,
+    pub has_links: bool,
+
+    pub first_page_number: i32,
+    pub last_page_number: i32,
+
+    pub content_length: i32,
+
+    pub preferred_presentation: Option<String>, // TODO: Check other publications, probably refers to full page or html display
+    pub content_reworked_date: Option<String>,
+
+    pub has_pronunciation_guide: bool,
 }
 
 pub struct RefPublication {
     id: i32,
-    
+
     version_number: i32,
     type_id: i32,
 
@@ -78,13 +80,13 @@ pub struct RefPublication {
     root_symbol: String,
     root_year: i32,
     root_meps_language_index: i32,
-    
+
     short_title: String,
     short_title_rich: Option<String>,
 
     display_title: String,
     display_title_rich: Option<String>,
-    
+
     reference_title: String,
     reference_title_rich: Option<String>,
 
@@ -114,11 +116,11 @@ pub struct RefPublication {
 
     has_publication_chapter_numbers: bool,
     has_publication_section_numbers: bool,
-    
+
     first_dated_text_date_offset: Option<NaiveDateTime>,
     last_dated_text_date_offset: Option<NaiveDateTime>,
 
-    meps_build_number: i32
+    meps_build_number: i32,
 }
 
 pub struct Extract {
@@ -141,7 +143,7 @@ pub struct Extract {
 
 pub struct Hyperlink {
     id: i32,
-    
+
     link: String,
     major_type: Option<i32>,
     key_symbol: Option<String>,
@@ -154,7 +156,7 @@ pub struct Hyperlink {
 
 pub struct DocumentExtract {
     id: i32,
-    
+
     // Foreign key to `Document` table
     document_id: i32,
 
@@ -172,7 +174,7 @@ pub struct DocumentExtract {
 
 pub struct DocumentHyperlink {
     id: i32,
-    
+
     // Foreign key to `Document` table
     document_id: i32,
 
@@ -200,7 +202,7 @@ pub struct InternalLink {
 
 pub struct DocumentInternalLink {
     id: i32,
-    
+
     // Foreign key to `Document` table
     document_id: i32,
 
@@ -225,7 +227,7 @@ pub struct Multimedia {
     minor_type: i32,
     width: i32,
     height: i32,
-    
+
     mime_type: String,
     label: String,
     label_rich: Option<String>,
@@ -248,12 +250,12 @@ pub struct Multimedia {
     meps_language_index: Option<i32>,
     issue_tag_number: i32,
     suppress_zoom: bool,
-    size_constraint: Option<String>
+    size_constraint: Option<String>,
 }
 
 pub struct DocumentMultimedia {
     id: i32,
-    
+
     // Foreign key to `Document` table
     document_id: i32,
 
@@ -284,10 +286,10 @@ pub struct Endnote {
     document_id: i32,
 
     text_id: i32,
-    
+
     label: String,
     label_rich: Option<String>,
-    
+
     content: Vec<u8>,
 }
 
@@ -304,7 +306,7 @@ pub struct ExtractMultimedia {
 
     major_type: i32,
     minor_type: i32,
-    
+
     width: i32,
     height: i32,
 
@@ -331,7 +333,7 @@ pub struct ExtractMultimedia {
     issue_tag_number: i32,
     suppress_zoom: bool,
 
-    size_constraint: Option<String>
+    size_constraint: Option<String>,
 }
 
 pub struct ExtractVideoMarker {
@@ -357,7 +359,7 @@ pub struct ExtractVideoMarker {
 
     begin_transition_duration_ticks: i32,
     end_transition_duration_ticks: i32,
-    
+
     begin_transition_frame_count: i32,
     end_transition_frame_count: i32,
 }
@@ -377,7 +379,7 @@ pub struct ExtractVideoMarkerRange {
 
 pub struct BibleCitation {
     id: i32,
-    
+
     // Foreign key to `Document` table
     document_id: i32,
 
@@ -395,16 +397,16 @@ pub struct BibleCitation {
 
     paragraph_ordinal: i32,
     marginal_classification: i32,
-    
+
     sort_position: i32,
 
     // Foreign key to `Hyperlink` table
-    hyperlink_id: i32
+    hyperlink_id: i32,
 }
 
 pub struct Footnote {
     id: i32,
-    
+
     // Foreign key to `Document` table
     document_id: i32,
 
@@ -417,7 +419,7 @@ pub struct Footnote {
     // Foreign key to `BibleVerse` table (Table doesn't exist)
     bible_verse_id: Option<i32>,
 
-    paragraph_ordinal: i32
+    paragraph_ordinal: i32,
 }
 
 pub struct ParagraphCommentary {
@@ -425,7 +427,7 @@ pub struct ParagraphCommentary {
 
     commentary_type: i32,
     label: String,
-    content: Vec<u8>
+    content: Vec<u8>,
 }
 
 pub struct ParagraphCommentaryMap {
@@ -437,12 +439,12 @@ pub struct ParagraphCommentaryMap {
     end_paragraph_ordinal: i32,
 
     // Foreign key to `ParagraphCommentary` table
-    paragraph_commentary_id: i32
+    paragraph_commentary_id: i32,
 }
 
 pub struct PublicationMeta {
     id: i32,
-    
+
     version_number: i32,
     type_id: i32,
 
@@ -452,7 +454,7 @@ pub struct PublicationMeta {
     root_symbol: String,
     root_year: i32,
     root_meps_language_index: i32,
-    
+
     short_title: String,
     short_title_rich: Option<String>,
 
@@ -471,12 +473,12 @@ pub struct PublicationMeta {
     english_symbol: String,
     unique_english_symbol: String,
 
-    issue_tag_number: String
+    issue_tag_number: String,
 }
 
 pub struct PublicationAttribute {
     id: i32,
-    
+
     // Foreign key to `PublicationMeta` table
     publication_id: i32,
 
@@ -517,40 +519,41 @@ pub struct PublicationIssueProperty {
     cover_title_rich: Option<String>,
 
     symbol: String,
-    undated_symbol: String
+    undated_symbol: String,
 }
 
 pub struct PublicationView {
     id: i32,
     name: String,
-    symbol: String
+    symbol: String,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct PublicationViewItem {
-    id: i32,
+    pub id: i32,
 
     // Foreign key to `PublicationView` table
-    publication_view_id: i32,
+    pub publication_view_id: i32,
 
-    parent_publication_view_item_id: i32,
-    
-    title: String,
-    title_rich: Option<String>,
+    pub parent_publication_view_item_id: i32,
 
-    schema_type: i32,
-    child_template_schema_type: Option<i32>,
+    pub title: String,
+    pub title_rich: Option<String>,
 
-    default_document_id: i32
+    pub schema_type: i32,
+    pub child_template_schema_type: Option<i32>,
+
+    pub default_document_id: i32,
 }
 
 pub struct PublicationViewItemDocument {
-    id: i32,
-    
+    pub id: i32,
+
     // Foreign key to `PublicationViewItem` table
-    publication_view_item_id: i32,
+    pub publication_view_item_id: i32,
 
     // Foreign key to `Document` table
-    document_id: i32
+    pub document_id: i32,
 }
 
 pub struct PublicationViewItemField {
@@ -561,7 +564,7 @@ pub struct PublicationViewItemField {
 
     value: String,
     value_rich: Option<String>,
-    
+
     type_name: String,
 }
 
@@ -573,7 +576,7 @@ pub struct PublicationViewSchema {
 
 pub struct PublicationYear {
     id: i32,
-    
+
     // Foreign key to `PublicationMeta` table
     publication_id: i32,
 
@@ -601,8 +604,8 @@ pub struct RelatedDocument {
     // Foreign key to `Document` table
     document_id: i32,
     meps_document_id: i32,
-    
-    relationship_type: i32
+
+    relationship_type: i32,
 }
 
 pub struct SearchIndexBibleVerse {
@@ -621,7 +624,7 @@ pub struct SearchIndexBibleVerse {
 
 pub struct SearchIndexDocument {
     id: i32,
-    
+
     // Foreign key to `Word` table
     word_id: i32,
 
@@ -646,14 +649,14 @@ pub struct SearchTextRangeDocument {
     text_positions: Vec<u8>,
     text_lengths: Vec<u8>,
 
-    scope_paragraph_data: Vec<u8>
+    scope_paragraph_data: Vec<u8>,
 }
 
 pub struct TextUnit {
     id: i32,
 
     type_name: String,
-    unit_id: i32
+    unit_id: i32,
 }
 
 pub struct Topic {
@@ -661,7 +664,7 @@ pub struct Topic {
 
     topic: String,
     display_topic: String,
-    display_topic_rich: Option<String>
+    display_topic_rich: Option<String>,
 }
 
 pub struct TopicDocument {
@@ -671,7 +674,7 @@ pub struct TopicDocument {
     document_id: i32,
 
     // Foreign key to `Topic` table
-    topic_id: i32
+    topic_id: i32,
 }
 
 pub struct VerseCommentary {
@@ -679,7 +682,7 @@ pub struct VerseCommentary {
 
     commentary_type: i32,
     label: String,
-    content: Vec<u8>
+    content: Vec<u8>,
 }
 
 pub struct VerseCommentaryMap {
@@ -687,9 +690,9 @@ pub struct VerseCommentaryMap {
 
     // Foreign Key to `BibleVerse` table
     bible_verse_id: i32,
-    
+
     // Foreign Key to `VerseCommentary` table
-    verse_commentary_id: i32
+    verse_commentary_id: i32,
 }
 
 pub struct VerseMultimediaMap {
@@ -699,7 +702,7 @@ pub struct VerseMultimediaMap {
     bible_verse_id: i32,
 
     // Foreign Key to `Multimedia` table
-    multimedia_id: i32
+    multimedia_id: i32,
 }
 
 pub struct VideoMarker {
@@ -722,23 +725,22 @@ pub struct VideoMarker {
 
     start_frame: i32,
     frame_count: i32,
-    
+
     begin_transition_duration_ticks: i32,
     end_transition_duration_ticks: i32,
-    
+
     begin_transition_frame_count: i32,
     end_transition_frame_count: i32,
 }
 
 pub struct VideoMarkerBibleVerseLocation {
     id: i32,
-    
+
     // Foreign Key to `BibleVerse` table
     bible_verse_id: i32,
 
     // Foreign Key to `VideoMarker` table
     video_marker_id: i32,
-
 }
 
 pub struct VideoMarkerParagraphLocation {

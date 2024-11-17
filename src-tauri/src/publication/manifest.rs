@@ -18,19 +18,46 @@ pub struct Manifest {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PublicationManifest {
     pub file_name: String,
+    #[serde(rename = "type")]
+    pub type_id: i32,
+    
     pub title: String,
     pub short_title: String,
     pub display_title: String,
     pub reference_title: String,
+    pub undated_reference_title: String,
+    
+    pub title_rich: String,
+    pub display_title_rich: String,
+    pub reference_title_rich: String,
+    pub undated_reference_title_rich: String,
+
+    pub symbol: String,
+    pub unique_english_symbol: String,
+    pub unique_symbol: String,
+    pub undated_symbol: String,
+    pub english_symbol: String,
+
     pub language: i32,
+    pub hash: String,
+    pub timestamp: String,
+    pub min_platform_version: i32,
+    pub schema_version: i32,
     pub year: i32,
     pub issue_id: i32,
     pub issue_number: i32,
+    pub variation: String,
     pub publication_type: String,
-    pub symbol: String,
+    pub publication_category_symbol: String,
+
+    pub root_symbol: String,
+    pub root_year: i32,
+    pub root_language: i32,
+
     pub images: Vec<Image>,
     pub categories: Vec<String>,
     pub attributes: Vec<String>,
+    pub issue_attributes: Vec<String>,
     pub issue_properties: IssueProperties,
 }
 
@@ -38,6 +65,7 @@ pub struct PublicationManifest {
 pub struct Image {
     pub signature: String,
     pub file_name: String,
+    #[serde(rename = "type")]
     pub image_type: String,
     pub attribute: String,
     pub width: i32,
@@ -47,7 +75,11 @@ pub struct Image {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct IssueProperties {
     pub title: String,
+    pub undated_title: String,
     pub cover_title: String,
+    pub title_rich: String,
+    pub undated_title_rich: String,
+    pub cover_title_rich: String,
     pub symbol: String,
     pub undated_symbol: String,
 }

@@ -3,18 +3,34 @@ import { useNavigate } from 'react-router-dom';
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import { Avatar, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 
+const PublicationIcon = ({type, id, alt=""}) => {
+    let [icon, SetIcon] = useState("");
+
+    useEffect(() => {
+        const getImages = async(type, id) => {
+            let images = await invoke(`catalog_get_images_of_type`, {imageType: type, publicationId: id});
+            SetIcon(convertFileSrc(images[0].path))
+        }
+
+        getImages(type, id)
+    }, [])
+
+    return (
+        <img
+            style={{marginRight: 20, height: 90}} 
+            src={icon}
+            alt={alt}
+        />
+    )
+}
 
 const PubCatalog = ({ publications }) => {
     const [loadedIdx, setLoadedIdx] = useState(0);  // `loaded_idx`
-    const limit = 10;  // Defina o limite conforme necessário
     const navigate = useNavigate();
 
     console.log(publications)
 
     const handleClick = async (publication) => {
-        let pubSymbol = `${publication.symbol}_${publication.language}`;  // TODO: Remover este sufixo
-        await invoke("pubcatalog_set_media_location", {lang: 'T', category: 'bk', pubSymbol})
-        navigate(`/summary/${publication.language}/${publication.category}/${pubSymbol}`);
     };
 
     return (
@@ -22,7 +38,7 @@ const PubCatalog = ({ publications }) => {
             {publications.map((publication) => (
                 <ListItemButton key={publication.symbol} onClick={() => handleClick(publication)}>
                     <ListItemIcon>
-                        <img style={{marginRight: 20, height: 90}} src={convertFileSrc(publication.cover_icon_path)} alt={publication.title} />
+                        <PublicationIcon type="t" id={publication.id} alt={publication.title} />
                     </ListItemIcon>
                     <ListItemText
                         primary={publication.title}

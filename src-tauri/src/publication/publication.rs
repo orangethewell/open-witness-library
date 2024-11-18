@@ -29,15 +29,16 @@ pub enum ContentTables {
 }
 
 pub struct Publication {
+    pub catalog_id: i64,
     db: Connection,
     master_key: Vec<u8>,
     decrypted_content_cache: LruCache<(ContentTables, i32), String>
 }
 
 impl Publication {
-    pub fn from_path<'a>(pub_path: PathBuf, name: &'a str) -> Result<Self, Box<dyn std::error::Error>> {
-        let db = Connection::open(pub_path.join(format!("{}.db", name)))?;
-        let mut master_key = vec![];
+    pub fn from_database<'a>(database_path: PathBuf, id: i64) -> Result<Self, Box<dyn std::error::Error>> {
+        let db = Connection::open(database_path)?;
+        let master_key: Vec<u8>;
 
         // Forge master key for document decrypting
         {
@@ -77,6 +78,7 @@ impl Publication {
         }
 
         Ok(Self {
+            catalog_id: id,
             db,
             master_key,
             decrypted_content_cache: LruCache::new(NonZero::new(5).unwrap())
@@ -123,6 +125,56 @@ impl Publication {
             documents.push(document);
         }
 
+        Ok(documents)
+    }
+
+    pub fn get_documents(&mut self) -> Result<Vec<Document>, Box<dyn std::error::Error>> {
+        let mut stmt = self.db.prepare("SELECT * FROM Document")?;
+        let mut rows = stmt.query([])?;
+
+        let mut documents = vec![];
+
+        if let Some(row) = rows.next()? {
+            let document = Document {
+                id: row.get(0)?,
+                publication_id: row.get(1)?,
+                meps_document_id: row.get(2)?,
+                meps_language_id: row.get(3)?,
+                class: row.get(4)?,
+                type_id: row.get(5)?,
+                section_number: row.get(6)?,
+                chapter_number: row.get(7)?,
+                title: row.get(8)?,
+                title_rich: row.get(9)?,
+                toc_title: row.get(10)?,
+                toc_title_rich: row.get(11)?,
+                context_title: row.get(12)?,
+                context_title_rich: row.get(13)?,
+                feature_title: row.get(14)?,
+                feature_title_rich: row.get(15)?,
+                subtitle: row.get(16)?,
+                subtitle_rich: row.get(17)?,
+                feature_subtitle: row.get(18)?,
+                feature_subtitle_rich: row.get(19)?,
+                content: row.get(20)?,
+                first_footnote_id: row.get(21)?,
+                last_footnote_id: row.get(22)?,
+                first_bible_citation_id: row.get(23)?,
+                last_bible_citation_id: row.get(24)?,
+                paragraph_count: row.get(25)?,
+                has_media_links: row.get(26)?,
+                has_links: row.get(27)?,
+                first_page_number: row.get(28)?,
+                last_page_number: row.get(29)?,
+                content_length: row.get(30)?,
+                preferred_presentation: row.get(31)?,
+                content_reworked_date: row.get(32)?,
+                has_pronunciation_guide: row.get(33)?
+            };
+
+            documents.push(document);
+        }
+        
         Ok(documents)
     }
 
@@ -173,6 +225,39 @@ impl Publication {
         Ok(document)
     }
 
+    pub fn get_dated_texts(&mut self) -> Result<Vec<DatedText>, Box<dyn std::error::Error>> {
+        let mut stmt = self.db.prepare("SELECT * FROM DatedText")?;
+        let mut rows = stmt.query([])?;
+
+        let mut dated_texts = vec![];
+        while let Some(row) = rows.next()? {
+            let dated_text = DatedText {
+                id: row.get(0)?,
+                document_id: row.get(1)?,
+                link: row.get(2)?,
+                first_date_offset: row.get(3)?,
+                last_date_offset: row.get(4)?,
+                first_footnote_id: row.get(5)?,
+                last_footnote_id: row.get(6)?,
+                first_bible_citation_id: row.get(7)?,
+                last_bible_citation_id: row.get(8)?,
+                begin_paragraph_ordinal: row.get(9)?,
+                end_paragraph_ordinal: row.get(10)?,
+                caption: row.get(11)?,
+                caption_rich: row.get(12)?,
+                content: row.get(13)?,
+            };
+
+            dated_texts.push(dated_text);
+        }
+
+        Ok(dated_texts)
+    }
+
+    // This function is quite inefficient in terms of memory, since it
+    // save a Document on frontend and backend, but anyway the `LruCache`
+    // save some processing power, especially when we need to go to the
+    // next or previous chapter multiple times.
     pub fn get_content_text_from(&mut self, content_table: ContentTables, id: i32) -> Result<Option<String>, Box<dyn std::error::Error>>{
         if let Some(content) = self.decrypted_content_cache.get(&(content_table, id)) {
             return Ok(Some(content.clone()))

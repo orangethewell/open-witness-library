@@ -6,36 +6,43 @@ import {
 } from "react-router-dom";
 import router from "./routes"
 import "./main.css"
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
 
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+
+import { alpha, createTheme, ThemeProvider, } from '@mui/material/styles';
+import { CssBaseline } from "@mui/material";
 import './i18n'
 
-const themeOptions = createTheme({
+const theme = createTheme({
   colorSchemes: {
-    light: {
-      primary: '#643ed8',
-      secondary: '#f50000',
-    },
     dark: {
-      primary: '#643ed8',
-      secondary: '#f50000',
+      palette: {
+        primary: {
+          main: alpha('#D6AFFF', 0.7),
+        },
+        secondary: {
+          main: alpha('#D6AFFF', 0.7),
+        },
+      },
     },
-    contrastThreshold: 3,
-    tonalOffset: 0.2,
   },
   palette: {
     primary: {
-      main: '#643ed8',
+      main: alpha('#7F00FF', 0.7),
     },
     secondary: {
-      main: '#f50000',
+      main: alpha('#7F00FF', 0.7),
     },
   },
 });
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ThemeProvider theme={themeOptions}>
+    <ThemeProvider theme={theme}>
+      <CssBaseline enableColorScheme />
       <RouterProvider router={router}/>
     </ThemeProvider>
   </React.StrictMode>,

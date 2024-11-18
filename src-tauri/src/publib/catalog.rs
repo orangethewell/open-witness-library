@@ -274,7 +274,11 @@ impl Catalog {
             params![
                 &pub_manifest.publication.language,
                 &pub_manifest.publication.publication_type,
-                &pub_manifest.publication.publication_category_symbol,
+                {if pub_manifest.publication.categories.len() > 1 {
+                    "Unknown"
+                } else {
+                    &pub_manifest.publication.categories[0]
+                }},
 
                 &pub_manifest.publication.title,
                 &pub_manifest.publication.short_title,

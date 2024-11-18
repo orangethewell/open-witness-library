@@ -2,6 +2,7 @@ use std::{
     fs, io::{self, Cursor, Read}, num::NonZero, path::PathBuf
 };
 
+use chrono::NaiveDateTime;
 use colored::Colorize;
 use lru::LruCache;
 use rusqlite::{params, Connection};
@@ -38,7 +39,7 @@ pub struct CollectionPublication {
 
     pub year: i32,
     pub volume_number: i32,
-    pub issue_tag_number: String,
+    pub issue_tag_number: i32,
 
     pub first_dated_text_date_offset: i32,
     pub last_dated_text_date_offset: i32,
@@ -56,7 +57,7 @@ pub struct CollectionPublication {
     pub jwpub: String,
 
     pub database_path: String,
-    pub on_external_storage: i32,
+    pub on_external_storage: String,
 
     pub undated_reference_title: String,
     pub expanded_size: i32,
@@ -117,7 +118,9 @@ impl Catalog {
                 ExpandedSize INTEGER NOT NULL,
                 MinPlatformVersion INTEGER NOT NULL,
                 KeySymbol TEXT NOT NULL,
-                MepsBuildNumber INTEGER NOT NULL
+                MepsBuildNumber INTEGER NOT NULL,
+
+                UNIQUE(JwPub)
             )",
             (),
         )?;
@@ -129,6 +132,7 @@ impl Catalog {
                 PublicationId INTEGER NOT NULL,
                 Attribute TEXT NOT NULL,
                 
+                UNIQUE(PublicationId,Attribute),
                 FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
@@ -141,6 +145,7 @@ impl Catalog {
                 PublicationId INTEGER NOT NULL,
                 Attribute TEXT NOT NULL,
                 
+                UNIQUE(PublicationId,Attribute)
                 FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
@@ -159,6 +164,7 @@ impl Catalog {
                 Symbol TEXT NOT NULL,
                 UndatedSymbol TEXT NOT NULL,
                 
+                UNIQUE(PublicationId,Symbol)
                 FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
@@ -178,6 +184,7 @@ impl Catalog {
 
                 Signature TEXT NOT NULL,
                 
+                UNIQUE(PublicationId,Signature)
                 FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
@@ -190,6 +197,7 @@ impl Catalog {
                 MepsDocumentId INTEGER NOT NULL,
                 PublicationId INTEGER NOT NULL,
 
+                UNIQUE(PublicationId,MepsDocumentId)
                 FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
@@ -204,6 +212,7 @@ impl Catalog {
                 End INTEGER NOT NULL,
                 Class INTEGER NOT NULL,
 
+                UNIQUE(PublicationId,Start,End)
                 FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
@@ -216,6 +225,7 @@ impl Catalog {
                 PublicationId INTEGER NOT NULL,
                 Book TEXT NOT NULL,
 
+                UNIQUE(PublicationId,Book)
                 FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             ()
@@ -229,6 +239,91 @@ impl Catalog {
             current_open: String::new(),
             publication_cache: LruCache::new(NonZero::new(5).unwrap()),
         })
+    }
+
+    pub fn update_metadata_for_publication(&mut self, id: i64, pub_manifest: &Manifest, first_dated_text_offset: Option<i32>, last_dated_text_offset: Option<i32>, database_path: String, on_external_storage: Option<i32>) -> Result<i64, Box<dyn std::error::Error>> {
+        self.catalog_db.execute(
+            "UPDATE Publication SET
+                LanguageIndex = ?1,
+                PublicationType = ?2,
+                PublicationCategorySymbol = ?3,
+                Title = ?4,
+                ShortTitle = ?5,
+                DisplayTitle = ?6,
+                Symbol = ?7,
+                UniqueEnglishSymbol = ?8,
+                Year = ?9,
+                VolumeNumber = ?10,
+                IssueTagNumber = ?11,
+                FirstDatedTextDateOffset = ?12,
+                LastDatedTextDateOffset = ?13,
+                RootSymbol = ?14,
+                RootYear = ?15,
+                RootMepsLanguageIndex = ?16,
+                VersionNumber = ?17,
+                SchemaVersionNumber = ?18,
+                Hash = ?19,
+                Timestamp = ?20,
+                JwPub = ?21,
+                DatabasePath = ?22,
+                OnExternalStorage = ?23,
+                UndatedReferenceTitle = ?24,
+                ExpandedSize = ?25,
+                MinPlatformVersion = ?26,
+                KeySymbol = ?27,
+                MepsBuildNumber = ?28
+            WHERE PublicationId=?29",
+            params![
+                &pub_manifest.publication.language,
+                &pub_manifest.publication.publication_type,
+                {if pub_manifest.publication.categories.len() > 1 {
+                    "Unknown"
+                } else {
+                    &pub_manifest.publication.categories[0]
+                }},
+
+                &pub_manifest.publication.title,
+                &pub_manifest.publication.short_title,
+                &pub_manifest.publication.display_title,
+
+                &pub_manifest.publication.symbol,
+                &pub_manifest.publication.unique_english_symbol,
+
+                &pub_manifest.publication.year,
+                0, // Volume number
+                &pub_manifest.publication.issue_number,
+                first_dated_text_offset.unwrap_or(19691231),
+                last_dated_text_offset.unwrap_or(19691231),
+
+                &pub_manifest.publication.root_symbol,
+                &pub_manifest.publication.root_year,
+                &pub_manifest.publication.root_language,
+
+                &pub_manifest.publication.schema_version,
+                &pub_manifest.publication.schema_version,
+
+                &pub_manifest.hash,
+                &pub_manifest.timestamp,
+                &pub_manifest.name,
+
+                &database_path,
+                
+                on_external_storage.unwrap_or(0),
+                &pub_manifest.publication.undated_reference_title,
+
+                &pub_manifest.expanded_size,
+                &pub_manifest.publication.min_platform_version,
+                &pub_manifest.publication.undated_symbol,
+                &pub_manifest.meps_build_number,
+                id
+            ]
+        )?;
+
+        let pub_id = self.catalog_db.last_insert_rowid();
+
+        debug!(target: TARGET, "Metadata updated on collection database for ID {}!", pub_id);
+
+        Ok(pub_id)
     }
 
     pub fn insert_metadata_for_publication(&mut self, pub_manifest: &Manifest, first_dated_text_offset: Option<i32>, last_dated_text_offset: Option<i32>, database_path: String, on_external_storage: Option<i32>) -> Result<i64, Box<dyn std::error::Error>> {
@@ -315,6 +410,19 @@ impl Catalog {
         Ok(pub_id)
     }
 
+    pub fn delete_attribute_for_publication<'a>(&mut self, id: i64, attribute: &'a str) -> Result<(), Box<dyn std::error::Error>> {
+        self.catalog_db.execute(
+            "DELETE FROM PublicationAttribute WHERE 
+                PublicationId=?1 AND
+                Attribute=?2", 
+            params![id, attribute]
+        )?;
+
+        debug!(target: TARGET, "Attribute \"{}\" deleted for publication ID {}.", attribute.bright_yellow(), id.to_string().bold());
+
+        Ok(())
+    }
+
     pub fn insert_attribute_for_publication<'a>(&mut self, id: i64, attribute: &'a str) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "INSERT INTO PublicationAttribute (
@@ -329,6 +437,19 @@ impl Catalog {
         Ok(())
     }
 
+    pub fn delete_issue_attribute_for_publication<'a>(&mut self, id: i64, attribute: &'a str) -> Result<(), Box<dyn std::error::Error>> {
+        self.catalog_db.execute(
+            "DELETE FROM PublicationIssueAttribute WHERE
+                PublicationId=?1 AND
+                Attribute=?2", 
+            params![id, attribute]
+        )?;
+
+        debug!(target: TARGET, "Issue attribute \"{}\" deleted from publication ID {}.", attribute.bright_yellow(), id.to_string().bold());
+
+        Ok(())
+    }
+
     pub fn insert_issue_attribute_for_publication<'a>(&mut self, id: i64, attribute: &'a str) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "INSERT INTO PublicationIssueAttribute (
@@ -339,6 +460,22 @@ impl Catalog {
         )?;
 
         debug!(target: TARGET, "Issue attribute \"{}\" added to publication ID {}!", attribute.bright_yellow(), id.to_string().bold());
+
+        Ok(())
+    }
+
+    pub fn delete_issue_property_for_publication(&mut self, id: i64, property: &IssueProperties) -> Result<(), Box<dyn std::error::Error>> {
+        self.catalog_db.execute(
+            "DELETE FROM PublicationIssueProperty WHERE
+                PublicationId=?1 AND
+                Symbol=?2", 
+            params![
+                id, 
+                &property.symbol,
+            ]
+        )?;
+
+        debug!(target: TARGET, "Issue properties deleted from publication ID {}.", id.to_string().bold());
 
         Ok(())
     }
@@ -365,6 +502,22 @@ impl Catalog {
         )?;
 
         debug!(target: TARGET, "Issue properties with cover title \"{}\" added to publication ID {}!", property.cover_title.bright_yellow(), id.to_string().bold());
+
+        Ok(())
+    }
+
+    pub fn delete_image_for_publication(&mut self, id: i64, image: &Image, path: String) -> Result<(), Box<dyn std::error::Error>> {
+        self.catalog_db.execute(
+            "DELETE FROM Image WHERE
+                PublicationId=?1 AND
+                Signature=?2", 
+            params![
+                id,
+                &image.signature,
+            ]
+        )?;
+        
+        debug!(target: TARGET, "Media path \"{}\" removed from Image table: publication ID {}.", path.bright_yellow(), id.to_string().bold());
 
         Ok(())
     }
@@ -396,6 +549,39 @@ impl Catalog {
         Ok(())
     }
 
+    pub fn remove_indexed_dated_texts(&mut self, publication: &mut Publication) -> Result<(), Box<dyn std::error::Error>> {
+        let dated_texts = publication.get_dated_texts()?;
+
+        for dated_text in dated_texts.iter() {
+            let document = publication.get_document_by_id(dated_text.document_id)?.unwrap_or_default();
+
+            debug!(
+                target: TARGET, 
+                "Removing indexed dated text (Start: \"{}\"; End: \"{}\") for publication ID {}... (Class {})", 
+                dated_text.first_date_offset.to_string().bright_blue(), 
+                dated_text.last_date_offset.to_string().bright_blue(), 
+                publication.catalog_id.to_string().bold(), 
+                document.class.to_string().yellow()
+            );
+
+            self.catalog_db.execute(
+                "DELETE FROM DatedText WHERE
+                    PublicationId=?1 AND
+                    Start=?2 AND
+                    End=?3 AND
+                    Class=?4", 
+                params![
+                    publication.catalog_id,
+                    dated_text.first_date_offset,
+                    dated_text.last_date_offset,
+                    document.class
+                ]
+            )?;
+        }
+
+        Ok(())
+    }
+
     fn index_dated_texts(&mut self, publication: &mut Publication) -> Result<(), Box<dyn std::error::Error>> {
         let dated_texts = publication.get_dated_texts()?;
 
@@ -423,6 +609,34 @@ impl Catalog {
                     dated_text.first_date_offset,
                     dated_text.last_date_offset,
                     document.class
+                ]
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn remove_indexed_documents(&mut self, publication: &mut Publication) -> Result<(), Box<dyn std::error::Error>> {
+        let documents = publication.get_documents()?;
+
+        for document in documents.iter() {
+            debug!(
+                target: TARGET, 
+                "Removing indexed document (MepsDocumentId: \"{}\") for publication ID {}... (Lang {})", 
+                document.meps_document_id.to_string().bright_blue(),  
+                publication.catalog_id.to_string().bold(), 
+                document.meps_language_id.to_string().yellow()
+            );
+
+            self.catalog_db.execute(
+                "DELETE FROM Document WHERE
+                    LanguageIndex=?1 AND
+                    MepsDocumentId=?2 AND
+                    PublicationId=?3", 
+                params![
+                    document.meps_language_id,
+                    document.meps_document_id,
+                    publication.catalog_id
                 ]
             )?;
         }
@@ -475,6 +689,20 @@ impl Catalog {
         let manifest = get_metadata_from_archive(&mut package)?;
         let pub_pathname = manifest.name.replace(".jwpub", "");
 
+        debug!(target: TARGET, "Checking if JWPUB doesn't match with any publication installed...");
+        let mut existing_id = None;
+        if let Some(publication_data) = self.get_publication_collection_meta(&manifest.name.replace(".jwpub", ""))? {
+            let new_timestamp = NaiveDateTime::parse_from_str(&manifest.timestamp, "%Y-%m-%dT%H:%M:%SZ")?;
+            let cur_timestamp = NaiveDateTime::parse_from_str(&publication_data.timestamp, "%Y-%m-%dT%H:%M:%SZ")?;
+
+            existing_id = Some(publication_data.id);
+            
+            if cur_timestamp >= new_timestamp {
+                error!(target: TARGET, "Publication {} is newer or the same than the installed version.", manifest.name.replace(".jwpub", ""));
+                return Err(format!("Publication {} is newer or the same than the installed version.", manifest.name.replace(".jwpub", "")).into());
+            }
+        }
+
         debug!(target: TARGET, "Configuring directory...");
         let location = self.pub_path.join(pub_pathname);
         if !location.exists() {
@@ -504,36 +732,63 @@ impl Catalog {
             last_dated_text_offset = Some(dated_texts[dated_texts.len() - 1].last_date_offset);
         }
 
-        let publication_id = self.insert_metadata_for_publication(
-            &manifest, 
-            first_dated_text_offset, 
-            last_dated_text_offset, 
-            location.join(&manifest.publication.file_name).to_str().unwrap().to_owned(), 
-            None
-        )?;
+        let publication_id = if let Some(id) = existing_id {
+            self.update_metadata_for_publication(
+                id as i64, 
+                &manifest, 
+                first_dated_text_offset, 
+                last_dated_text_offset, 
+                location.join(&manifest.publication.file_name).to_str().unwrap().to_owned(), 
+                None
+            )?;
+            id as i64
+        } else {
+            self.insert_metadata_for_publication(
+                &manifest, 
+                first_dated_text_offset, 
+                last_dated_text_offset, 
+                location.join(&manifest.publication.file_name).to_str().unwrap().to_owned(), 
+                None
+            )?
+        };
 
         tmp_publication.catalog_id = publication_id;
 
         if manifest.publication.attributes.len() > 0 {
             for attribute in manifest.publication.attributes.iter() {
+                if existing_id.is_some() {
+                    self.delete_attribute_for_publication(tmp_publication.catalog_id, attribute)?;
+                }
                 self.insert_attribute_for_publication(tmp_publication.catalog_id, attribute)?;
             }
         }
 
         if manifest.publication.issue_attributes.len() > 0 {
             for issue_attribute in manifest.publication.issue_attributes.iter() {
+                if existing_id.is_some() {
+                    self.delete_issue_attribute_for_publication(tmp_publication.catalog_id, issue_attribute)?;
+                }
                 self.insert_issue_attribute_for_publication(tmp_publication.catalog_id, issue_attribute)?;
             }
         }
 
         if !manifest.publication.issue_properties.symbol.is_empty() {
+            if existing_id.is_some() {
+                self.delete_issue_property_for_publication(tmp_publication.catalog_id, &manifest.publication.issue_properties)?;
+            }
             self.insert_issue_property_for_publication(tmp_publication.catalog_id, &manifest.publication.issue_properties)?;
         }
 
         if dated_texts.len() > 0 {
+            if existing_id.is_some() {
+                self.remove_indexed_dated_texts(&mut tmp_publication)?;
+            }
             self.index_dated_texts(&mut tmp_publication)?;
         }
 
+        if existing_id.is_some() {
+            self.remove_indexed_documents(&mut tmp_publication)?;
+        }
         self.index_documents(&mut tmp_publication)?;
 
         debug!(

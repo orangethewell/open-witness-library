@@ -713,6 +713,10 @@ impl Catalog {
         Ok(None)
     }
 
+    pub fn get_current_publication(&mut self) -> Option<&mut Publication> {
+        self.publication_cache.get_mut(&self.current_open)
+    }
+
     pub fn open_publication_connection(&mut self, filename_symbol: String) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(_publication) = self.publication_cache.get(&filename_symbol) {
             debug!(target: TARGET, "Reopening connection with \"{}\"...", filename_symbol);

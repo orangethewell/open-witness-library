@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Box, Button, Divider, FormControl, InputLabel, MenuItem, OutlinedInput, Select } from '@mui/material';
-import { useTheme } from '@emotion/react';
+import { Box, Button, Divider, FormControl, InputLabel, MenuItem, OutlinedInput, Select, } from '@mui/material';
+import { useColorScheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { languageList, i18n } from '../i18n';
 
 const SettingsView = () => {
-    const theme = useTheme();
-    const [appearance, setAppearance] = useState("default");
+    const { mode, setMode } = useColorScheme();
 
     const { t } = useTranslation();
     const [language, setLanguage] = useState(i18n.language);
@@ -23,8 +22,10 @@ const SettingsView = () => {
                 <Select 
                     labelId="appearance-label"
                     id="appearance-select" 
-                    value={appearance} 
-                    onChange={(ev) => setAppearance(ev.target.value)}
+                    value={mode ?? 'system'} 
+                    onChange={(event) =>
+                        setMode(event.target.value)
+                      }
                     input={<OutlinedInput label={t("settings.appearance")} />}
                     MenuProps={{
                         PaperProps: {
@@ -35,7 +36,7 @@ const SettingsView = () => {
                         },
                     }}
                 >
-                    <MenuItem value="default">{t("settings.appearance_selectors.default")}</MenuItem>
+                    <MenuItem value="system">{t("settings.appearance_selectors.default")}</MenuItem>
                     <MenuItem value="light">{t("settings.appearance_selectors.light")}</MenuItem>
                     <MenuItem value="dark">{t("settings.appearance_selectors.dark")}</MenuItem>
                 </Select>

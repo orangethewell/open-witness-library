@@ -4,11 +4,9 @@ import { Outlet, redirect, useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import { CollectionsBookmarkTwoTone, HomeTwoTone, SettingsTwoTone } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '@emotion/react';
 
 const Root = () => {
     const { t } = useTranslation();
-    useTheme();
 
     const [open, setOpen] = useState(false);
 
@@ -36,11 +34,14 @@ const Root = () => {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h6" noWrap component="div">
+                    <Typography sx={{ zIndex: (theme) => theme.zIndex.drawer - 1 }} variant="h6" noWrap component="div">
                         Open Witness Library
                     </Typography>
                 </Toolbar>
             </AppBar>
+            <Container className='outlet-container'>
+                <Outlet/>
+            </Container>
             <Drawer 
                 sx={{
                     width: 240,
@@ -82,9 +83,6 @@ const Root = () => {
                     </List>
                 </Box>
             </Drawer>
-            <Container className='outlet-container'>
-                <Outlet/>
-            </Container>
         </>
     );
 };

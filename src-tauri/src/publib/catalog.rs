@@ -67,6 +67,18 @@ pub struct CollectionPublication {
     pub meps_build_number: i32,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct CollectionImage {
+    pub id: i32,
+    pub publication_id: i32,
+    pub image_type: String,
+    pub attribute: String,
+    pub path: String,
+    pub width: i32,
+    pub height: i32,
+    pub signature: String
+}
+
 impl Catalog {
     pub fn init<T: Into<PathBuf>>(location: T) -> Result<Self, Box<dyn std::error::Error>> {
         debug!(target: TARGET, "Initializing catalog...");
@@ -779,6 +791,15 @@ impl Catalog {
             self.insert_issue_property_for_publication(tmp_publication.catalog_id, &manifest.publication.issue_properties)?;
         }
 
+        if manifest.publication.images.len() > 0 {
+            for image in manifest.publication.images.iter() {
+                if existing_id.is_some() {
+                    self.delete_image_for_publication(tmp_publication.catalog_id, image, location.join(&image.file_name).to_str().unwrap().to_owned())?;
+                }
+                self.insert_image_for_publication(tmp_publication.catalog_id, image, location.join(&image.file_name).to_str().unwrap().to_owned())?;
+            }
+        }
+
         if dated_texts.len() > 0 {
             if existing_id.is_some() {
                 self.remove_indexed_dated_texts(&mut tmp_publication)?;
@@ -791,7 +812,7 @@ impl Catalog {
         }
         self.index_documents(&mut tmp_publication)?;
 
-        debug!(
+        info!(
             target: TARGET, 
             "publication ID {} installed at {}!", 
             tmp_publication.catalog_id.to_string().bold(), 
@@ -799,6 +820,46 @@ impl Catalog {
         );
 
         Ok(())
+    }
+
+    pub fn get_images_of_type<'a>(
+        &self,
+        image_type: &'a str,
+        publication_id: i64,
+    ) -> Result<Vec<CollectionImage>, Box<dyn std::error::Error>> {
+        let mut stmt = self
+           .catalog_db
+           .prepare(
+                "SELECT
+                    ImageId,
+                    PublicationId,
+                    Type,
+                    Attribute,
+                    Path,
+                    Width,
+                    Height,
+                    Signature
+                FROM Image
+            WHERE PublicationId =?1 AND Type =?2"
+        )?;
+        let mut rows = stmt.query(params![publication_id, image_type])?;
+        let mut images = Vec::new();
+        while let Some(row) = rows.next()? {
+            let image = CollectionImage {
+                id: row.get(0)?,
+                publication_id: row.get(1)?,
+                image_type: row.get(2)?,
+                attribute: row.get(3)?,
+                path: row.get(4)?,
+                width: row.get(5)?,
+                height: row.get(6)?,
+                signature: row.get(7)?,
+            };
+
+            images.push(image);
+        }
+        
+        Ok(images)
     }
 
     pub fn get_list_from_type(

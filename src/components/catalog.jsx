@@ -24,8 +24,7 @@ const PublicationIcon = ({type, id, alt=""}) => {
     )
 }
 
-const PubCatalog = ({ publications }) => {
-    const [loadedIdx, setLoadedIdx] = useState(0);  // `loaded_idx`
+const Catalog = ({ publications }) => {
     const navigate = useNavigate();
 
     console.log(publications)
@@ -50,4 +49,4 @@ const PubCatalog = ({ publications }) => {
     );
 };
 
-export default PubCatalog;
+export default Catalog;

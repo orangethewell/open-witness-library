@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import PubCatalog from '../components/catalog';
+import Catalog from '../components/catalog';
 import { invoke } from '@tauri-apps/api/core';
 import { Button, Box } from '@mui/material';
 import { Fab } from '@mui/material';
@@ -24,15 +24,14 @@ const Home = () => {
             }],
             directory: false,
         })
-        console.log("Trying install file");
+        
         await invoke("catalog_install_jwpub_file", {filePath: file})
-        console.log("Something wrong?")
     }
 
     return (
         <Box>
             <Button onClick={handleClick}>Update List</Button>
-            <PubCatalog publications={publications} />
+            <Catalog publications={publications} />
             <Fab onClick={addPublication} style={{position: "fixed", bottom: 20, right: 20}} color="primary">
                 <Add/>
             </Fab>

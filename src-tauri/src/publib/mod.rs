@@ -3,10 +3,14 @@ pub mod manager_old;
 pub mod extension;
 
 pub mod manifest;
+pub use manifest::Manifest;
+
 pub mod publication;
 pub use publication::Publication;
-pub mod tables;
-pub use manifest::Manifest;
-pub mod catalog;
 
-pub use manager_old::PubCatalog;
+pub mod tables;
+
+pub mod catalog;
+pub use catalog::Catalog;
+
+

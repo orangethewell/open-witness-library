@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use serde::{Serialize, Deserialize};
 
 pub struct DatedText {
@@ -11,8 +10,8 @@ pub struct DatedText {
     // MEPS helper
     pub link: String,
 
-    pub first_date_offset: NaiveDateTime,
-    pub last_date_offset: NaiveDateTime,
+    pub first_date_offset: i32,
+    pub last_date_offset: i32,
 
     // Foreign keys to `Footnote` table
     pub first_footnote_id: Option<i32>,
@@ -42,10 +41,10 @@ pub struct Document {
     pub meps_document_id: i32,
     pub meps_language_id: i32,
 
-    pub class: i32,
+    pub class: String,
     pub type_id: i32,
     pub section_number: i32,
-    pub chapter_number: i32,
+    pub chapter_number: Option<i32>,
 
     // -------------------------------------------
     pub title: String,
@@ -146,8 +145,8 @@ pub struct RefPublication {
     has_publication_chapter_numbers: bool,
     has_publication_section_numbers: bool,
 
-    first_dated_text_date_offset: Option<NaiveDateTime>,
-    last_dated_text_date_offset: Option<NaiveDateTime>,
+    first_dated_text_date_offset: Option<i32>,
+    last_dated_text_date_offset: Option<i32>,
 
     meps_build_number: i32,
 }
@@ -575,6 +574,7 @@ pub struct PublicationViewItem {
     pub default_document_id: i32,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct PublicationViewItemDocument {
     pub id: i32,
 

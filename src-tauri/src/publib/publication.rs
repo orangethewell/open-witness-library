@@ -9,6 +9,8 @@ use sha2::{Sha256, Digest};
 
 use super::tables::*;
 
+const TARGET: &'static str = "catalog::publication";
+
 #[derive(Hash, Eq, PartialEq, Copy, Clone)]
 pub enum ContentTables {
     Document,
@@ -40,7 +42,10 @@ impl Publication {
         let db = Connection::open(database_path)?;
         let master_key: Vec<u8>;
 
-        // Forge master key for document decrypting
+        debug!(
+            target: TARGET,
+            "Forging master key for decryption jobs..."
+        );
         {
             let mut stmt = db
                 .prepare("SELECT MepsLanguageIndex, Symbol, Year, IssueTagNumber FROM Publication")?;
@@ -49,10 +54,10 @@ impl Publication {
                 symbol, 
                 year, 
                 issue_tag_number
-            ) = stmt.query_row([1], |row| Ok((
-                row.get::<_, i64>(0)?,
+            ) = stmt.query_row([], |row| Ok((
+                row.get::<_, i32>(0)?,
                 row.get::<_, String>(1)?,
-                row.get::<_, i64>(2)?,
+                row.get::<_, i32>(2)?,
                 row.get::<_, String>(3)?,
             )))?;
 
@@ -77,6 +82,11 @@ impl Publication {
                 .collect();
         }
 
+        debug!(
+            target: TARGET,
+            "Master key forged."
+        );
+
         Ok(Self {
             catalog_id: id,
             db,
@@ -86,7 +96,16 @@ impl Publication {
     }
 
     pub fn get_view_items(&self) -> Result<Vec<PublicationViewItem>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT * FROM PublicationViewItem")?;
+        let mut stmt = self.db.prepare("SELECT
+            PublicationViewItemId,
+            PublicationViewId,
+            ParentPublicationViewItemId,
+            Title,
+            TitleRich,
+            SchemaType,
+            ChildTemplateSchemaType,
+            DefaultDocumentId
+        FROM PublicationViewItem")?;
         let mut rows = stmt.query([])?;
 
         let mut view_items = vec![];
@@ -110,7 +129,11 @@ impl Publication {
     }
 
     pub fn get_view_items_documents(&self) -> Result<Vec<PublicationViewItemDocument>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT * FROM PublicationViewItemDocument")?;
+        let mut stmt = self.db.prepare("SELECT 
+            PublicationViewItemDocumentId,
+            PublicationViewItemId,
+            DocumentId
+        FROM PublicationViewItemDocument")?;
         let mut rows = stmt.query([])?;
 
         let mut documents = vec![];
@@ -129,12 +152,47 @@ impl Publication {
     }
 
     pub fn get_documents(&mut self) -> Result<Vec<Document>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT * FROM Document")?;
+        let mut stmt = self.db.prepare("SELECT 
+            DocumentId,
+            PublicationId,
+            MepsDocumentId,
+            MepsLanguageIndex,
+            Class,
+            Type,
+            SectionNumber,
+            ChapterNumber,
+            Title,
+            TitleRich,
+            TocTitle,
+            TocTitleRich,
+            ContextTitle,
+            ContextTitleRich,
+            FeatureTitle,
+            FeatureTitleRich,
+            Subtitle,
+            SubtitleRich,
+            FeatureSubtitle,
+            FeatureSubtitleRich,
+            Content,
+            FirstFootnoteId,
+            LastFootnoteId,
+            FirstBibleCitationId,
+            LastBibleCitationId,
+            ParagraphCount,
+            HasMediaLinks,
+            HasLinks,
+            FirstPageNumber,
+            LastPageNumber,
+            ContentLength,
+            PreferredPresentation,
+            ContentReworkedDate,
+            HasPronunciationGuide
+        FROM Document")?;
         let mut rows = stmt.query([])?;
 
         let mut documents = vec![];
 
-        if let Some(row) = rows.next()? {
+        while let Some(row) = rows.next()? {
             let document = Document {
                 id: row.get(0)?,
                 publication_id: row.get(1)?,
@@ -179,7 +237,42 @@ impl Publication {
     }
 
     pub fn get_document_by_id(&mut self, id: i32) -> Result<Option<Document>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT * FROM Document WHERE DocumentId =?")?;
+        let mut stmt = self.db.prepare("SELECT
+            DocumentId,
+            PublicationId,
+            MepsDocumentId,
+            MepsLanguageIndex,
+            Class,
+            Type,
+            SectionNumber,
+            ChapterNumber,
+            Title,
+            TitleRich,
+            TocTitle,
+            TocTitleRich,
+            ContextTitle,
+            ContextTitleRich,
+            FeatureTitle,
+            FeatureTitleRich,
+            Subtitle,
+            SubtitleRich,
+            FeatureSubtitle,
+            FeatureSubtitleRich,
+            Content,
+            FirstFootnoteId,
+            LastFootnoteId,
+            FirstBibleCitationId,
+            LastBibleCitationId,
+            ParagraphCount,
+            HasMediaLinks,
+            HasLinks,
+            FirstPageNumber,
+            LastPageNumber,
+            ContentLength,
+            PreferredPresentation,
+            ContentReworkedDate,
+            HasPronunciationGuide
+        FROM Document WHERE DocumentId = ?1")?;
         let mut rows = stmt.query([id])?;
 
         let mut document = None;
@@ -226,7 +319,22 @@ impl Publication {
     }
 
     pub fn get_dated_texts(&mut self) -> Result<Vec<DatedText>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT * FROM DatedText")?;
+        let mut stmt = self.db.prepare("SELECT
+            DatedTextId,
+            DocumentId,
+            Link,
+            FirstDateOffset,
+            LastDateOffset,
+            FirstFootnoteId,
+            LastFootnoteId,
+            FirstBibleCitationId,
+            LastBibleCitationId,
+            BeginParagraphOrdinal,
+            EndParagraphOrdinal,
+            Caption,
+            CaptionRich,
+            Content
+        FROM DatedText")?;
         let mut rows = stmt.query([])?;
 
         let mut dated_texts = vec![];

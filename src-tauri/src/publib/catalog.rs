@@ -12,7 +12,7 @@ use crate::utils::unpack_zip;
 
 use super::{manifest::{Image, IssueProperties}, Manifest, Publication};
 
-const TARGET: &'static str = "Catalog";
+const TARGET: &'static str = "catalog";
 
 pub struct Catalog {
     pub_path: PathBuf,
@@ -129,7 +129,7 @@ impl Catalog {
                 PublicationId INTEGER NOT NULL,
                 Attribute TEXT NOT NULL,
                 
-                FOREIGN KEY (PublicationId) REFERENCES Publication(Id)
+                FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
         )?;
@@ -141,7 +141,7 @@ impl Catalog {
                 PublicationId INTEGER NOT NULL,
                 Attribute TEXT NOT NULL,
                 
-                FOREIGN KEY (PublicationId) REFERENCES Publication(Id)
+                FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
         )?;
@@ -159,7 +159,7 @@ impl Catalog {
                 Symbol TEXT NOT NULL,
                 UndatedSymbol TEXT NOT NULL,
                 
-                FOREIGN KEY (PublicationId) REFERENCES Publication(Id)
+                FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
         )?;
@@ -178,7 +178,7 @@ impl Catalog {
 
                 Signature TEXT NOT NULL,
                 
-                FOREIGN KEY (PublicationId) REFERENCES Publication(Id)
+                FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
         )?;
@@ -190,7 +190,7 @@ impl Catalog {
                 MepsDocumentId INTEGER NOT NULL,
                 PublicationId INTEGER NOT NULL,
 
-                FOREIGN KEY (PublicationId) REFERENCES Publication(Id)
+                FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
         )?;
@@ -204,7 +204,7 @@ impl Catalog {
                 End INTEGER NOT NULL,
                 Class INTEGER NOT NULL,
 
-                FOREIGN KEY (PublicationId) REFERENCES Publication(Id)
+                FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             (),
         )?;
@@ -216,7 +216,7 @@ impl Catalog {
                 PublicationId INTEGER NOT NULL,
                 Book TEXT NOT NULL,
 
-                FOREIGN KEY (PublicationId) REFERENCES Publication(Id)
+                FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
             ()
         )?;
@@ -237,35 +237,27 @@ impl Catalog {
                 LanguageIndex,
                 PublicationType,
                 PublicationCategorySymbol,
-
                 Title,
                 ShortTitle,
                 DisplayTitle,
-                
                 Symbol,
                 UniqueEnglishSymbol,
-                
                 Year,
                 VolumeNumber,
                 IssueTagNumber,
                 FirstDatedTextDateOffset,
                 LastDatedTextDateOffset,
-                
                 RootSymbol,
                 RootYear,
                 RootMepsLanguageIndex,
-                
                 VersionNumber,
                 SchemaVersionNumber,
                 Hash,
                 Timestamp,
-                
                 JwPub,
                 DatabasePath,
-                
                 OnExternalStorage,
                 UndatedReferenceTitle,
-                
                 ExpandedSize,
                 MinPlatformVersion,
                 KeySymbol,
@@ -355,11 +347,9 @@ impl Catalog {
         self.catalog_db.execute(
             "INSERT INTO PublicationIssueProperty (
                 PublicationId,
-                
                 Title,
                 UndatedTitle,
                 CoverTitle,
-
                 Symbol,
                 UndatedSymbol,
             ) VALUES (?1,?2,?3,?4,?5,?6)", 
@@ -386,7 +376,6 @@ impl Catalog {
                 Type,
                 Attribute,
                 Path,
-                
                 Width,
                 Height,
                 Signature
@@ -415,24 +404,24 @@ impl Catalog {
 
             debug!(
                 target: TARGET, 
-                "Indexing dated text (Start: \"{}\"; End: \"{}\") for publication ID {}! (Class {})", 
-                dated_text.first_date_offset.format("%Y%m%d").to_string().bright_blue(), 
-                dated_text.last_date_offset.format("%Y%m%d").to_string().bright_blue(), 
+                "Indexing dated text (Start: \"{}\"; End: \"{}\") for publication ID {}... (Class {})", 
+                dated_text.first_date_offset.to_string().bright_blue(), 
+                dated_text.last_date_offset.to_string().bright_blue(), 
                 publication.catalog_id.to_string().bold(), 
                 document.class.to_string().yellow()
             );
 
             self.catalog_db.execute(
-                "INSERT DatedText (
+                "INSERT INTO DatedText (
                     PublicationId,
                     Start,
                     End,
-                    Class,
+                    Class
                 ) VALUES (?1,?2,?3,?4)", 
                 params![
                     publication.catalog_id,
-                    dated_text.first_date_offset.format("%Y%m%d").to_string().parse::<i32>().unwrap(),
-                    dated_text.last_date_offset.format("%Y%m%d").to_string().parse::<i32>().unwrap(),
+                    dated_text.first_date_offset,
+                    dated_text.last_date_offset,
                     document.class
                 ]
             )?;
@@ -447,18 +436,18 @@ impl Catalog {
         for document in documents.iter() {
             debug!(
                 target: TARGET, 
-                "Indexing document (MepsDocumentId: \"{}\") for publication ID {}! (Lang {})", 
+                "Indexing document (MepsDocumentId: \"{}\") for publication ID {}... (Lang {})", 
                 document.meps_document_id.to_string().bright_blue(),  
                 publication.catalog_id.to_string().bold(), 
                 document.meps_language_id.to_string().yellow()
             );
 
             self.catalog_db.execute(
-                "INSERT Document (
+                "INSERT INTO Document (
                     LanguageIndex,
                     MepsDocumentId,
-                    PublicationId,
-                ) VALUES (?1,?2,?2)", 
+                    PublicationId
+                ) VALUES (?1,?2,?3)", 
                 params![
                     document.meps_language_id,
                     document.meps_document_id,
@@ -511,8 +500,8 @@ impl Catalog {
 
         let dated_texts = tmp_publication.get_dated_texts()?;
         if dated_texts.len() > 0 {
-            first_dated_text_offset = Some(dated_texts[0].first_date_offset.format("%Y%m%d").to_string().parse::<i32>().unwrap());
-            last_dated_text_offset = Some(dated_texts[dated_texts.len() - 1].last_date_offset.format("%Y%m%d").to_string().parse::<i32>().unwrap());
+            first_dated_text_offset = Some(dated_texts[0].first_date_offset);
+            last_dated_text_offset = Some(dated_texts[dated_texts.len() - 1].last_date_offset);
         }
 
         let publication_id = self.insert_metadata_for_publication(
@@ -547,6 +536,13 @@ impl Catalog {
 
         self.index_documents(&mut tmp_publication)?;
 
+        debug!(
+            target: TARGET, 
+            "publication ID {} installed at {}!", 
+            tmp_publication.catalog_id.to_string().bold(), 
+            location.display().to_string().green()
+        );
+
         Ok(())
     }
 
@@ -556,7 +552,7 @@ impl Catalog {
     ) -> Result<Vec<CollectionPublication>, Box<dyn std::error::Error>> {
         let mut stmt = self
             .catalog_db
-            .prepare("SELECT (
+            .prepare("SELECT
                 PublicationId,
                 LanguageIndex,
                 PublicationType,
@@ -593,7 +589,7 @@ impl Catalog {
                 MinPlatformVersion,
                 KeySymbol,
                 MepsBuildNumber
-            ) FROM Publication WHERE PublicationType=?1")?;
+            FROM Publication WHERE PublicationType=?1")?;
         let mut rows = stmt.query([publication_type])?;
         let mut pub_collection = Vec::new();
         while let Some(row) = rows.next()? {
@@ -641,7 +637,7 @@ impl Catalog {
     ) -> Result<Option<CollectionPublication>, Box<dyn std::error::Error>> {
         let mut stmt = self
             .catalog_db
-            .prepare("SELECT (
+            .prepare("SELECT
                 PublicationId,
                 LanguageIndex,
                 PublicationType,
@@ -678,7 +674,7 @@ impl Catalog {
                 MinPlatformVersion,
                 KeySymbol,
                 MepsBuildNumber
-            ) FROM Publication WHERE JwPub=?1")?;
+            FROM Publication WHERE JwPub=?1")?;
         let mut rows = stmt.query([format!("{}.jwpub", filename_symbol)])?;
         if let Some(row) = rows.next()? {
             return Ok(Some(CollectionPublication {

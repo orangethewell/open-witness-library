@@ -2,7 +2,10 @@ use std::fs;
 use std::io;
 use std::path::PathBuf;
 
+use colored::Colorize;
 use zip::ZipArchive;
+
+const TARGET: &'static str = "utils";
 
 pub fn unpack_zip<R: std::io::Seek + std::io::Read>(
     mut archive: ZipArchive<R>,
@@ -23,14 +26,20 @@ pub fn unpack_zip<R: std::io::Seek + std::io::Read>(
         }
 
         if (*file.name()).ends_with('/') {
-            println!("File {} extracted to \"{}\"", i, outpath.display());
+            debug!(
+                target: TARGET,
+                "File {} extracted to \"{}\"",
+                i.to_string().cyan(),
+                outpath.display().to_string().bright_yellow(),
+            );
             fs::create_dir_all(&outpath).unwrap();
         } else {
-            println!(
-                "File {} extracted to \"{}\" ({} bytes)",
-                i,
-                outpath.display(),
-                file.size()
+            debug!(
+                target: TARGET,
+                "File {} extracted to \"{}\" ({})",
+                i.to_string().cyan(),
+                outpath.display().to_string().bright_yellow(),
+                format!("{} bytes", file.size()).yellow()
             );
             if let Some(p) = outpath.parent() {
                 if !p.exists() {

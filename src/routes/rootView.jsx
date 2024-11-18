@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Divider, Toolbar, Drawer, AppBar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, IconButton, Box } from '@mui/material';
+import { Toolbar, Drawer, AppBar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, IconButton, Box, Container } from '@mui/material';
 import { Outlet, redirect, useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import { CollectionsBookmarkTwoTone, HomeTwoTone, SettingsTwoTone } from '@mui/icons-material';
@@ -82,9 +82,9 @@ const Root = () => {
                     </List>
                 </Box>
             </Drawer>
-            <Box className='outlet-container'>
+            <Container className='outlet-container'>
                 <Outlet/>
-            </Box>
+            </Container>
         </>
     );
 };

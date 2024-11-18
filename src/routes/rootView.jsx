@@ -63,7 +63,7 @@ const Root = () => {
                             </ListItemButton>
                         </ListItem>
                         <ListItem key={"library"} disablePadding>
-                            <ListItemButton onClick={(_) => navigate("/")}>
+                            <ListItemButton onClick={(_) => navigate("/library")}>
                             <ListItemIcon>
                                 <CollectionsBookmarkTwoTone/>
                             </ListItemIcon>

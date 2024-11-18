@@ -1,7 +1,36 @@
 use chrono::NaiveDateTime;
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize, Clone)]
+pub struct DatedText {
+    // Primary key
+    pub id: i32,
+
+    // Foreign key to `Document` table
+    pub document_id: i32,
+
+    // MEPS helper
+    pub link: String,
+
+    pub first_date_offset: NaiveDateTime,
+    pub last_date_offset: NaiveDateTime,
+
+    // Foreign keys to `Footnote` table
+    pub first_footnote_id: Option<i32>,
+    pub last_footnote_id: Option<i32>,
+
+    pub first_bible_citation_id: i32,
+    pub last_bible_citation_id: i32,
+
+    pub begin_paragraph_ordinal: i32,
+    pub end_paragraph_ordinal: i32,
+
+    pub caption: String,
+    pub caption_rich: Option<String>,
+
+    pub content: Vec<u8>
+}
+
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Document {
     // Primary key
     pub id: i32,

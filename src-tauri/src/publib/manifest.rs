@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::vec::Vec;
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Manifest {
     pub name: String,
     pub hash: String,
@@ -16,6 +17,7 @@ pub struct Manifest {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct PublicationManifest {
     pub file_name: String,
     #[serde(rename = "type")]
@@ -48,7 +50,6 @@ pub struct PublicationManifest {
     pub issue_number: i32,
     pub variation: String,
     pub publication_type: String,
-    pub publication_category_symbol: String,
 
     pub root_symbol: String,
     pub root_year: i32,
@@ -62,6 +63,7 @@ pub struct PublicationManifest {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Image {
     pub signature: String,
     pub file_name: String,
@@ -73,6 +75,7 @@ pub struct Image {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct IssueProperties {
     pub title: String,
     pub undated_title: String,

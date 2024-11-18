@@ -862,6 +862,21 @@ impl Catalog {
         Ok(images)
     }
 
+    pub fn get_count_of_type(
+        &self,
+        publication_type: &str,
+    ) -> Result<i32, Box<dyn std::error::Error>> {
+        let mut stmt = self
+            .catalog_db
+            .prepare("SELECT
+                COUNT(PublicationId)
+            FROM Publication WHERE PublicationType=?1")?;
+        
+        Ok(stmt.query_row([publication_type], |row| {
+            Ok(row.get(1)?)
+        })?)
+    }
+
     pub fn get_list_from_type(
         &self,
         publication_type: &str,

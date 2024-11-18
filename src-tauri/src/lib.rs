@@ -56,6 +56,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             catalogue::catalog_install_jwpub_file,
             catalogue::catalog_get_list_from_type,
+            catalogue::catalog_get_count_from_type,
             catalogue::catalog_get_publication_view_from,
             catalogue::catalog_get_document_content,
             catalogue::catalog_get_images_of_type,

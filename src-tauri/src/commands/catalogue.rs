@@ -24,6 +24,20 @@ pub async fn catalog_install_jwpub_file(manager: tauri::State<'_, CatalogManager
     Ok(())
 }
 
+#[tauri::command]
+pub async fn catalog_get_count_from_type(manager: tauri::State<'_, CatalogManager>, publication_type: String) -> Result<i32, String> {
+    debug!(
+        target: TARGET, 
+        "{}: {} => get list count from type {}", 
+        "COMMAND_REQUEST".bright_green(),
+        "Catalog".bright_magenta(),
+        publication_type.green()
+    );
+    let catalog = manager.catalog.lock().await;
+    catalog.get_count_of_type(&publication_type).map_err(|err| err.to_string())
+
+}
+
 // Can change for language support
 #[tauri::command]
 pub async fn catalog_get_list_from_type(manager: tauri::State<'_, CatalogManager>, publication_type: String) -> Result<Vec<CollectionPublication>, String> {

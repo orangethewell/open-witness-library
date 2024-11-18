@@ -7,8 +7,12 @@ import { languageList, i18n } from '../i18n';
 const SettingsView = () => {
     const { mode, setMode } = useColorScheme();
 
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [language, setLanguage] = useState(i18n.language);
+
+    const handleChangeLanguage = (language) => {
+        i18n.changeLanguage(language)
+    }
 
     console.log(languageList)
 
@@ -48,7 +52,10 @@ const SettingsView = () => {
                     labelId="language-label"
                     id="language-select" 
                     value={language} 
-                    onChange={(ev) => setLanguage(ev.target.value)}
+                    onChange={(ev) => {
+                        setLanguage(ev.target.value);
+                        handleChangeLanguage(ev.target.value)
+                    }}
                     input={<OutlinedInput label={t("settings.language")} />}
                     MenuProps={{
                         PaperProps: {

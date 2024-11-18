@@ -85,8 +85,8 @@ pub struct Document {
     pub has_media_links: bool,
     pub has_links: bool,
 
-    pub first_page_number: i32,
-    pub last_page_number: i32,
+    pub first_page_number: Option<i32>,
+    pub last_page_number: Option<i32>,
 
     pub content_length: i32,
 

@@ -873,7 +873,7 @@ impl Catalog {
             FROM Publication WHERE PublicationType=?1")?;
         
         Ok(stmt.query_row([publication_type], |row| {
-            Ok(row.get(1)?)
+            Ok(row.get(0)?)
         })?)
     }
 

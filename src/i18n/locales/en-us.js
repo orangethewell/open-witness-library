@@ -5,6 +5,19 @@ export default {
             library: 'Library',
             settings: 'Settings',
         },
+        library: {
+            title: "Biblioteca",
+            publication_types: {
+                book: "Books",
+                brochure: "Brochures and booklets",
+                watchtower: "The Watchtower",
+                awake: "Awake!",
+                meeting_workbook: "Meeting Workbooks",
+                program: "Programs",
+                web: "Article Series",
+                manual_guidelines: "Guidelines",
+            }
+        },
         settings: {
             title: 'Settings',
             display: 'Display',

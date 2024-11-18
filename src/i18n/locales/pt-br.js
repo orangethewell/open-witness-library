@@ -5,6 +5,19 @@ export default {
             library: 'Biblioteca',
             settings: 'Configurações',
         },
+        library: {
+            title: "Biblioteca",
+            publication_types: {
+                book: "Livros",
+                brochure: "Brochuras e livretos",
+                watchtower: "A Sentinela",
+                awake: "Despertai!",
+                meeting_workbook: "Apostilas",
+                program: "Programas",
+                web: "Série de Artigos",
+                manual_guidelines: "Orientações",
+            }
+        },
         settings: {
             title: 'Configurações',
             display: 'Exibição',

@@ -18,7 +18,7 @@ const DocumentItemButton = (props) => {
         }} secondaryTypographyProps={{
             variant: "body1",
             color: "textPrimary"
-        }} secondary={finder(item.id).document.toc_title} primary={finder(item.id).document.context_title ? (finder(item.id).document.context_title) : undefined}/>
+        }} secondary={finder(item.id).document.toc_title ? (finder(item.id).document.toc_title) : (item.title)} primary={finder(item.id).document.context_title ? (finder(item.id).document.context_title) : undefined}/>
     </ListItemButton>)
 }
 

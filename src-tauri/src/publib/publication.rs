@@ -96,7 +96,8 @@ impl Publication {
     }
 
     pub fn get_view_items(&self) -> Result<Vec<PublicationViewItem>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT
+        let mut fallback = false;
+        let mut stmt = match self.db.prepare("SELECT
             PublicationViewItemId,
             PublicationViewId,
             ParentPublicationViewItemId,
@@ -105,7 +106,25 @@ impl Publication {
             SchemaType,
             ChildTemplateSchemaType,
             DefaultDocumentId
-        FROM PublicationViewItem")?;
+        FROM PublicationViewItem") {
+            Ok(stmt) => stmt,
+            Err(_) => {
+                fallback = true;
+                info!(
+                    target: TARGET,
+                    "Falling back to deprecated PublicationViewItem table."
+                );
+                self.db.prepare("SELECT
+                    PublicationViewItemId,
+                    PublicationViewId,
+                    ParentPublicationViewItemId,
+                    Title,
+                    SchemaType,
+                    ChildTemplateSchemaType,
+                    DefaultDocumentId
+                FROM PublicationViewItem")?
+            }
+        };
         let mut rows = stmt.query([])?;
 
         let mut view_items = vec![];
@@ -116,10 +135,22 @@ impl Publication {
                 publication_view_id: row.get(1)?,
                 parent_publication_view_item_id: row.get(2)?,
                 title: row.get(3)?,
-                title_rich: row.get(4)?,
-                schema_type: row.get(5)?,
-                child_template_schema_type: row.get(6)?,
-                default_document_id: row.get(7)?,
+                title_rich: match fallback {
+                    false => row.get(4)?,
+                    true => None,
+                },
+                schema_type: match fallback {
+                    false => row.get(5)?,
+                    true => row.get(4)?,
+                },
+                child_template_schema_type: match fallback {
+                    false => row.get(6)?,
+                    true => row.get(5)?,
+                },
+                default_document_id: match fallback {
+                    false => row.get(7)?,
+                    true => row.get(6)?,
+                },
             };
 
             view_items.push(item);
@@ -152,7 +183,8 @@ impl Publication {
     }
 
     pub fn get_documents(&mut self) -> Result<Vec<Document>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT 
+        let mut fallback = false;
+        let mut stmt = match self.db.prepare("SELECT
             DocumentId,
             PublicationId,
             MepsDocumentId,
@@ -187,7 +219,42 @@ impl Publication {
             PreferredPresentation,
             ContentReworkedDate,
             HasPronunciationGuide
-        FROM Document")?;
+        FROM Document") {
+            Ok(stmt) => stmt,
+            Err(_err) => {
+                fallback = true;
+                info!(
+                    target: TARGET,
+                    "Falling back to deprecated Document table."
+                );
+                self.db.prepare("SELECT
+                    DocumentId,
+                    PublicationId,
+                    MepsDocumentId,
+                    MepsLanguageIndex,
+                    Class,
+                    Type,
+                    SectionNumber,
+                    Title,
+                    TocTitle,
+                    ContextTitle,
+                    FeatureTitle,
+                    Subtitle,
+                    FeatureSubtitle,
+                    Content,
+                    FirstFootnoteId,
+                    LastFootnoteId,
+                    FirstBibleCitationId,
+                    LastBibleCitationId,
+                    ParagraphCount,
+                    HasMediaLinks,
+                    HasLinks,
+                    FirstPageNumber,
+                    LastPageNumber,
+                    ContentLength
+                FROM Document")?
+            }
+        };
         let mut rows = stmt.query([])?;
 
         let mut documents = vec![];
@@ -201,33 +268,114 @@ impl Publication {
                 class: row.get(4)?,
                 type_id: row.get(5)?,
                 section_number: row.get(6)?,
-                chapter_number: row.get(7)?,
-                title: row.get(8)?,
-                title_rich: row.get(9)?,
-                toc_title: row.get(10)?,
-                toc_title_rich: row.get(11)?,
-                context_title: row.get(12)?,
-                context_title_rich: row.get(13)?,
-                feature_title: row.get(14)?,
-                feature_title_rich: row.get(15)?,
-                subtitle: row.get(16)?,
-                subtitle_rich: row.get(17)?,
-                feature_subtitle: row.get(18)?,
-                feature_subtitle_rich: row.get(19)?,
-                content: row.get(20)?,
-                first_footnote_id: row.get(21)?,
-                last_footnote_id: row.get(22)?,
-                first_bible_citation_id: row.get(23)?,
-                last_bible_citation_id: row.get(24)?,
-                paragraph_count: row.get(25)?,
-                has_media_links: row.get(26)?,
-                has_links: row.get(27)?,
-                first_page_number: row.get(28)?,
-                last_page_number: row.get(29)?,
-                content_length: row.get(30)?,
-                preferred_presentation: row.get(31)?,
-                content_reworked_date: row.get(32)?,
-                has_pronunciation_guide: row.get(33)?
+                chapter_number: match fallback {
+                    false => row.get(7)?,
+                    true => None,
+                },
+                title: match fallback {
+                    false => row.get(8)?,
+                    true => row.get(7)?,
+                },
+                title_rich: match fallback {
+                    false => row.get(9)?,
+                    true => None,
+                },
+                toc_title: match fallback {
+                    false => row.get(10)?,
+                    true => row.get(8)?,
+                },
+                toc_title_rich: match fallback {
+                    false => row.get(11)?,
+                    true => None,
+                },
+                context_title: match fallback {
+                    false => row.get(12)?,
+                    true => row.get(9)?,
+                },
+                context_title_rich: match fallback {
+                    false => row.get(13)?,
+                    true => None,
+                },
+                feature_title: match fallback {
+                    false => row.get(14)?,
+                    true => row.get(10)?,
+                },
+                feature_title_rich: match fallback {
+                    false => row.get(15)?,
+                    true => None,
+                },
+                subtitle: match fallback {
+                    false => row.get(16)?,
+                    true => row.get(11)?,
+                },
+                subtitle_rich: match fallback {
+                    false => row.get(17)?,
+                    true => None,
+                },
+                feature_subtitle: match fallback {
+                    false => row.get(18)?,
+                    true => row.get(12)?,
+                },
+                feature_subtitle_rich: match fallback {
+                    false => row.get(19)?,
+                    true => None,
+                },
+                content: match fallback {
+                    false => row.get(20)?,
+                    true => row.get(13)?,
+                },
+                first_footnote_id: match fallback {
+                    false => row.get(21)?,
+                    true => row.get(14)?,
+                },
+                last_footnote_id: match fallback {
+                    false => row.get(22)?,
+                    true => row.get(15)?,
+                },
+                first_bible_citation_id: match fallback {
+                    false => row.get(23)?,
+                    true => row.get(16)?,
+                },
+                last_bible_citation_id: match fallback {
+                    false => row.get(24)?,
+                    true => row.get(17)?,
+                },
+                paragraph_count: match fallback {
+                    false => row.get(25)?,
+                    true => row.get(18)?,
+                },
+                has_media_links: match fallback {
+                    false => row.get(26)?,
+                    true => row.get(19)?,
+                },
+                has_links: match fallback {
+                    false => row.get(27)?,
+                    true => row.get(20)?,
+                },
+                first_page_number: match fallback {
+                    false => row.get(28)?,
+                    true => row.get(21)?,
+                },
+                last_page_number: match fallback {
+                    false => row.get(29)?,
+                    true => row.get(22)?,
+                },
+                content_length: match fallback {
+                    false => row.get(30)?,
+                    true => row.get(23)?,
+                },
+                preferred_presentation: match fallback {
+                    false => row.get(31)?,
+                    true => None,
+                },
+                content_reworked_date: match fallback {
+                    false => row.get(32)?,
+                    true => None,
+                },
+                has_pronunciation_guide: match fallback {
+                    false => row.get(33)?,
+                    true => false,
+                }
             };
 
             documents.push(document);
@@ -237,7 +385,8 @@ impl Publication {
     }
 
     pub fn get_document_by_id(&mut self, id: i32) -> Result<Option<Document>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT
+        let mut fallback = false;
+        let mut stmt = match self.db.prepare("SELECT
             DocumentId,
             PublicationId,
             MepsDocumentId,
@@ -272,7 +421,42 @@ impl Publication {
             PreferredPresentation,
             ContentReworkedDate,
             HasPronunciationGuide
-        FROM Document WHERE DocumentId = ?1")?;
+        FROM Document WHERE DocumentId = ?1") {
+            Ok(stmt) => stmt,
+            Err(_err) => {
+                fallback = true;
+                info!(
+                    target: TARGET,
+                    "Falling back to deprecated Document table."
+                );
+                self.db.prepare("SELECT
+                    DocumentId,
+                    PublicationId,
+                    MepsDocumentId,
+                    MepsLanguageIndex,
+                    Class,
+                    Type,
+                    SectionNumber,
+                    Title,
+                    TocTitle,
+                    ContextTitle,
+                    FeatureTitle,
+                    Subtitle,
+                    FeatureSubtitle,
+                    Content,
+                    FirstFootnoteId,
+                    LastFootnoteId,
+                    FirstBibleCitationId,
+                    LastBibleCitationId,
+                    ParagraphCount,
+                    HasMediaLinks,
+                    HasLinks,
+                    FirstPageNumber,
+                    LastPageNumber,
+                    ContentLength
+                FROM Document WHERE DocumentId = ?1")?
+            }
+        };
         let mut rows = stmt.query([id])?;
 
         let mut document = None;
@@ -286,40 +470,122 @@ impl Publication {
                 class: row.get(4)?,
                 type_id: row.get(5)?,
                 section_number: row.get(6)?,
-                chapter_number: row.get(7)?,
-                title: row.get(8)?,
-                title_rich: row.get(9)?,
-                toc_title: row.get(10)?,
-                toc_title_rich: row.get(11)?,
-                context_title: row.get(12)?,
-                context_title_rich: row.get(13)?,
-                feature_title: row.get(14)?,
-                feature_title_rich: row.get(15)?,
-                subtitle: row.get(16)?,
-                subtitle_rich: row.get(17)?,
-                feature_subtitle: row.get(18)?,
-                feature_subtitle_rich: row.get(19)?,
-                content: row.get(20)?,
-                first_footnote_id: row.get(21)?,
-                last_footnote_id: row.get(22)?,
-                first_bible_citation_id: row.get(23)?,
-                last_bible_citation_id: row.get(24)?,
-                paragraph_count: row.get(25)?,
-                has_media_links: row.get(26)?,
-                has_links: row.get(27)?,
-                first_page_number: row.get(28)?,
-                last_page_number: row.get(29)?,
-                content_length: row.get(30)?,
-                preferred_presentation: row.get(31)?,
-                content_reworked_date: row.get(32)?,
-                has_pronunciation_guide: row.get(33)?
+                chapter_number: match fallback {
+                    false => row.get(7)?,
+                    true => None,
+                },
+                title: match fallback {
+                    false => row.get(8)?,
+                    true => row.get(7)?,
+                },
+                title_rich: match fallback {
+                    false => row.get(9)?,
+                    true => None,
+                },
+                toc_title: match fallback {
+                    false => row.get(10)?,
+                    true => row.get(8)?,
+                },
+                toc_title_rich: match fallback {
+                    false => row.get(11)?,
+                    true => None,
+                },
+                context_title: match fallback {
+                    false => row.get(12)?,
+                    true => row.get(9)?,
+                },
+                context_title_rich: match fallback {
+                    false => row.get(13)?,
+                    true => None,
+                },
+                feature_title: match fallback {
+                    false => row.get(14)?,
+                    true => row.get(10)?,
+                },
+                feature_title_rich: match fallback {
+                    false => row.get(15)?,
+                    true => None,
+                },
+                subtitle: match fallback {
+                    false => row.get(16)?,
+                    true => row.get(11)?,
+                },
+                subtitle_rich: match fallback {
+                    false => row.get(17)?,
+                    true => None,
+                },
+                feature_subtitle: match fallback {
+                    false => row.get(18)?,
+                    true => row.get(12)?,
+                },
+                feature_subtitle_rich: match fallback {
+                    false => row.get(19)?,
+                    true => None,
+                },
+                content: match fallback {
+                    false => row.get(20)?,
+                    true => row.get(13)?,
+                },
+                first_footnote_id: match fallback {
+                    false => row.get(21)?,
+                    true => row.get(14)?,
+                },
+                last_footnote_id: match fallback {
+                    false => row.get(22)?,
+                    true => row.get(15)?,
+                },
+                first_bible_citation_id: match fallback {
+                    false => row.get(23)?,
+                    true => row.get(16)?,
+                },
+                last_bible_citation_id: match fallback {
+                    false => row.get(24)?,
+                    true => row.get(17)?,
+                },
+                paragraph_count: match fallback {
+                    false => row.get(25)?,
+                    true => row.get(18)?,
+                },
+                has_media_links: match fallback {
+                    false => row.get(26)?,
+                    true => row.get(19)?,
+                },
+                has_links: match fallback {
+                    false => row.get(27)?,
+                    true => row.get(20)?,
+                },
+                first_page_number: match fallback {
+                    false => row.get(28)?,
+                    true => row.get(21)?,
+                },
+                last_page_number: match fallback {
+                    false => row.get(29)?,
+                    true => row.get(22)?,
+                },
+                content_length: match fallback {
+                    false => row.get(30)?,
+                    true => row.get(23)?,
+                },
+                preferred_presentation: match fallback {
+                    false => row.get(31)?,
+                    true => None,
+                },
+                content_reworked_date: match fallback {
+                    false => row.get(32)?,
+                    true => None,
+                },
+                has_pronunciation_guide: match fallback {
+                    false => row.get(33)?,
+                    true => false,
+                }
             });
         }
         Ok(document)
     }
 
     pub fn get_dated_texts(&mut self) -> Result<Vec<DatedText>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT
+        let mut fallback = false;
+        let mut stmt = match self.db.prepare("SELECT
             DatedTextId,
             DocumentId,
             Link,
@@ -334,7 +600,29 @@ impl Publication {
             Caption,
             CaptionRich,
             Content
-        FROM DatedText")?;
+        FROM DatedText") {
+            Ok(stmt) => stmt,
+            Err(_e) => {
+                fallback = true;
+                info!(
+                    target: TARGET,
+                    "Falling back to deprecated DatedText table."
+                );
+                self.db.prepare("SELECT
+                    DatedTextId,
+                    DocumentId,
+                    Link,
+                    FirstDateOffset,
+                    LastDateOffset,
+                    FirstFootnoteId,
+                    LastFootnoteId,
+                    FirstBibleCitationId,
+                    LastBibleCitationId,
+                    Caption,
+                    Content
+                FROM DatedText")?
+            }
+        };
         let mut rows = stmt.query([])?;
 
         let mut dated_texts = vec![];
@@ -349,11 +637,26 @@ impl Publication {
                 last_footnote_id: row.get(6)?,
                 first_bible_citation_id: row.get(7)?,
                 last_bible_citation_id: row.get(8)?,
-                begin_paragraph_ordinal: row.get(9)?,
-                end_paragraph_ordinal: row.get(10)?,
-                caption: row.get(11)?,
-                caption_rich: row.get(12)?,
-                content: row.get(13)?,
+                begin_paragraph_ordinal: match fallback {
+                    false => row.get(9)?,
+                    true => 0
+                },
+                end_paragraph_ordinal: match fallback {
+                    false => row.get(10)?,
+                    true => 0
+                },
+                caption: match fallback {
+                    false => row.get(11)?,
+                    true => row.get(9)?
+                },
+                caption_rich: match fallback {
+                    false => row.get(12)?,
+                    true => None
+                },
+                content: match fallback {
+                    false => row.get(13)?,
+                    true => row.get(10)?
+                },
             };
 
             dated_texts.push(dated_text);
@@ -374,8 +677,13 @@ impl Publication {
         match content_table {
             ContentTables::Document => {
                 if let Some(document) = self.get_document_by_id(id)? {
-                    let content = self.decrypt_content(document.content)?;
-                    self.decrypted_content_cache.put((ContentTables::Document, id), content.clone());
+                    let content = if let Some(content) = document.content { 
+                        let content = self.decrypt_content(content)?;
+                        self.decrypted_content_cache.put((ContentTables::Document, id), content.clone());
+                        content
+                    } else {
+                        return Ok(None)
+                    };
                     Ok(Some(content))
                 } else {
                     Ok(None)

@@ -39,7 +39,7 @@ pub struct CollectionPublication {
 
     pub year: i32,
     pub volume_number: i32,
-    pub issue_tag_number: i32,
+    pub issue_tag_number: Option<i32>,
 
     pub first_dated_text_date_offset: i32,
     pub last_dated_text_date_offset: i32,
@@ -108,7 +108,7 @@ impl Catalog {
                 
                 Year INTEGER NOT NULL,
                 VolumeNumber INTEGER NOT NULL,
-                IssueTagNumber INTEGER NOT NULL,
+                IssueTagNumber INTEGER,
                 FirstDatedTextDateOffset INTEGER NOT NULL,
                 LastDatedTextDateOffset INTEGER NOT NULL,
                 

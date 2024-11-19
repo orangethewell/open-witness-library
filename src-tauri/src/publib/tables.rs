@@ -17,8 +17,8 @@ pub struct DatedText {
     pub first_footnote_id: Option<i32>,
     pub last_footnote_id: Option<i32>,
 
-    pub first_bible_citation_id: i32,
-    pub last_bible_citation_id: i32,
+    pub first_bible_citation_id: Option<i32>,
+    pub last_bible_citation_id: Option<i32>,
 
     pub begin_paragraph_ordinal: i32,
     pub end_paragraph_ordinal: i32,
@@ -66,7 +66,7 @@ pub struct Document {
     pub feature_subtitle_rich: Option<String>,
     // -------------------------------------------
     // Content is a symmetric encrypted inflated file
-    pub content: Vec<u8>,
+    pub content: Option<Vec<u8>>,
 
     // -------------------------------------------
     pub first_footnote_id: Option<i32>,

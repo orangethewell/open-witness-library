@@ -2,6 +2,7 @@ import { Box, List, ListItemButton, ListItemText, Tab, Tabs } from "@mui/materia
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { GrNext, GrPrevious } from "react-icons/gr";
 
 const DocumentView = () => {
     const { symbol, documentId } = useParams();
@@ -15,10 +16,6 @@ const DocumentView = () => {
 
     const navigate = useNavigate();
 
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '/pub-styling.css'
-    document.head.appendChild(link);
     useEffect(() => {
         const fetchData = async () => {
             await invoke("catalog_open_connection", {filenameSymbol: symbol});
@@ -32,13 +29,13 @@ const DocumentView = () => {
 
     const prevDocument = prevExists ? (
         <button className='go-route-pub go-pub-back' onClick={() => navigate(`/publication/${symbol}/${Id - 1}`)}>
-            {"<"}
+            <GrPrevious />
         </button>
     ) : null;
 
     const nextDocument = nextExists ? (
         <button className='go-route-pub go-pub-next' onClick={() => navigate(`/publication/${symbol}/${Id + 1}`)}>
-            {">"}
+            <GrNext />
         </button>
     ) : null;
 
@@ -53,7 +50,7 @@ const DocumentView = () => {
                 if (src && src.startsWith('jwpub-media://')) {
                     const imageName = src.split('jwpub-media://')[1];
                     // Convertendo o caminho do arquivo usando convertFileSrc
-                    const newSrc = await convertFileSrc(imageName, 'jwpub-media');
+                    const newSrc = convertFileSrc(imageName, 'jwpub-media');
                     img.setAttribute('src', newSrc);  // Atualiza o src da imagem
                 }
             }
@@ -98,7 +95,10 @@ const DocumentView = () => {
     return (
         <Box>
             {prevDocument}
-            <article id='article' className='jwac docClass-13 docId-1102023301 ms-ROMAN ml-T dir-ltr pub-lmd layout-reading layout-sidebar' ref={contentRef} />
+            <article style={{
+                paddingTop: 8,
+                paddingBottom: 8,
+            }} id='article' className='jwac docClass-13 docId-1102023301 ms-ROMAN ml-T dir-ltr pub-lmd layout-reading layout-sidebar' ref={contentRef} />
             {nextDocument}
         </Box>
     );

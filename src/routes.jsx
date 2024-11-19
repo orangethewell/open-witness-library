@@ -1,11 +1,11 @@
 import Home from "./routes/homeView";
 import SettingsView from "./routes/settingsView";
-import SummaryView from "./routes/summaryView";
 import ChapterView from "./routes/chapterView";
 import Root from "./routes/rootView";
 import { createBrowserRouter } from "react-router-dom";
 import LibraryView from "./routes/libraryView";
 import CategoryView from "./routes/categoryView";
+import PublicationView from "./routes/publicationView";
 
 const routes = [
     {
@@ -25,12 +25,12 @@ const routes = [
                 element: <CategoryView />,
             },
             {
-                path: "/settings",
-                element: <SettingsView />,
+                path: "/publication/:symbol",
+                element: <PublicationView />,
             },
             {
-                path: "/summary/:lang/:category/:pubSymbol", 
-                element: <SummaryView />
+                path: "/settings",
+                element: <SettingsView />,
             },
             {
                 path:"/pubview/:lang/:category/:pubSymbol/:chapterId",

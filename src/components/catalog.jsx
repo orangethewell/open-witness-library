@@ -29,7 +29,8 @@ const Catalog = ({ publications }) => {
 
     console.log(publications)
 
-    const handleClick = async (publication) => {
+    const handleClick = (publication) => {
+        navigate(`/publication/${publication.jwpub.replace(".jwpub", "")}`);
     };
 
     return (

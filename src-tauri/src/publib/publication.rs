@@ -407,7 +407,6 @@ impl Publication {
             SubtitleRich,
             FeatureSubtitle,
             FeatureSubtitleRich,
-            Content,
             FirstFootnoteId,
             LastFootnoteId,
             FirstBibleCitationId,
@@ -443,7 +442,6 @@ impl Publication {
                     FeatureTitle,
                     Subtitle,
                     FeatureSubtitle,
-                    Content,
                     FirstFootnoteId,
                     LastFootnoteId,
                     FirstBibleCitationId,
@@ -522,60 +520,57 @@ impl Publication {
                     false => row.get(19)?,
                     true => None,
                 },
-                content: match fallback {
+                content: None,
+                first_footnote_id: match fallback {
                     false => row.get(20)?,
                     true => row.get(13)?,
                 },
-                first_footnote_id: match fallback {
+                last_footnote_id: match fallback {
                     false => row.get(21)?,
                     true => row.get(14)?,
                 },
-                last_footnote_id: match fallback {
+                first_bible_citation_id: match fallback {
                     false => row.get(22)?,
                     true => row.get(15)?,
                 },
-                first_bible_citation_id: match fallback {
+                last_bible_citation_id: match fallback {
                     false => row.get(23)?,
                     true => row.get(16)?,
                 },
-                last_bible_citation_id: match fallback {
+                paragraph_count: match fallback {
                     false => row.get(24)?,
                     true => row.get(17)?,
                 },
-                paragraph_count: match fallback {
+                has_media_links: match fallback {
                     false => row.get(25)?,
                     true => row.get(18)?,
                 },
-                has_media_links: match fallback {
+                has_links: match fallback {
                     false => row.get(26)?,
                     true => row.get(19)?,
                 },
-                has_links: match fallback {
+                first_page_number: match fallback {
                     false => row.get(27)?,
                     true => row.get(20)?,
                 },
-                first_page_number: match fallback {
+                last_page_number: match fallback {
                     false => row.get(28)?,
                     true => row.get(21)?,
                 },
-                last_page_number: match fallback {
+                content_length: match fallback {
                     false => row.get(29)?,
                     true => row.get(22)?,
                 },
-                content_length: match fallback {
-                    false => row.get(30)?,
-                    true => row.get(23)?,
-                },
                 preferred_presentation: match fallback {
-                    false => row.get(31)?,
+                    false => row.get(30)?,
                     true => None,
                 },
                 content_reworked_date: match fallback {
-                    false => row.get(32)?,
+                    false => row.get(31)?,
                     true => None,
                 },
                 has_pronunciation_guide: match fallback {
-                    false => row.get(33)?,
+                    false => row.get(32)?,
                     true => false,
                 }
             });

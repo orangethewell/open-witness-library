@@ -2,7 +2,7 @@ use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use tauri::async_runtime::Mutex;
 
-use crate::publib::{self, catalog::{CollectionImage, CollectionPublication}, publication::ContentTables, tables::{PublicationViewItem, PublicationViewItemDocument}};
+use crate::publib::{self, catalog::{CollectionImage, CollectionPublication}, publication::ContentTables, tables::{Document, PublicationViewItem, PublicationViewItemDocument}};
 
 const TARGET: &'static str = "commands::catalog";
 pub struct CatalogManager {
@@ -92,6 +92,23 @@ pub async fn catalog_get_images_of_type(manager: tauri::State<'_, CatalogManager
 
     let catalog = manager.catalog.lock().await;
     catalog.get_images_of_type(&image_type, publication_id).map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+pub async fn catalog_get_document_by_id(manager: tauri::State<'_, CatalogManager>, document_id: i32) -> Result<Option<Document>, String> {
+    debug!(
+        target: TARGET, 
+        "{}: {} => get document by ID {}", 
+        "COMMAND_REQUEST".bright_green(),
+        "Catalog -> Publication".bright_magenta(),
+        document_id.to_string().yellow()
+    );
+    let mut catalog = manager.catalog.lock().await;
+    if let Some(publication) = catalog.get_current_publication() {
+        return Ok(publication.get_document_by_id(document_id).map_err(|err| err.to_string())?)
+    }
+
+    Err("There aren't a publication open.".to_owned())
 }
 
 #[tauri::command]

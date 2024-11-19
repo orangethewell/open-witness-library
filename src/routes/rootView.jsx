@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
-import { Toolbar, Drawer, AppBar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, IconButton, Box, Container } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Toolbar, Drawer, AppBar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, IconButton, Box, Container, Slide, useColorScheme } from '@mui/material';
 import { Outlet, redirect, useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import { CollectionsBookmarkTwoTone, HomeTwoTone, SettingsTwoTone } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { invoke } from '@tauri-apps/api/core';
 
 const Root = () => {
+    const { mode, _setMode } = useColorScheme();
+    
+    useEffect(() => {
+        const notifyThemeChange = async () => {
+            await invoke("settings_set_webview_theme", {theme: mode});
+        }
+
+        notifyThemeChange();
+    }, [mode]);
+
     const { t } = useTranslation();
 
     const [open, setOpen] = useState(false);

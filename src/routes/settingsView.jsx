@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Button, Divider, FormControl, InputLabel, MenuItem, OutlinedInput, Select, } from '@mui/material';
 import { useColorScheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { languageList, i18n } from '../i18n';
+import { invoke } from '@tauri-apps/api/core';
 
 const SettingsView = () => {
     const { mode, setMode } = useColorScheme();
@@ -13,6 +14,14 @@ const SettingsView = () => {
     const handleChangeLanguage = (language) => {
         i18n.changeLanguage(language)
     }
+
+    useEffect(() => {
+        const notifyThemeChange = async () => {
+            await invoke("settings_set_webview_theme", {theme: mode});
+        }
+
+        notifyThemeChange();
+    }, [mode])
 
     return (
         <Box>

@@ -5,6 +5,7 @@ import ChapterView from "./routes/chapterView";
 import Root from "./routes/rootView";
 import { createBrowserRouter } from "react-router-dom";
 import LibraryView from "./routes/libraryView";
+import CategoryView from "./routes/categoryView";
 
 const routes = [
     {
@@ -18,6 +19,10 @@ const routes = [
             {
                 path: "/library",
                 element: <LibraryView />,
+            },
+            {
+                path: "/library/:category",
+                element: <CategoryView />,
             },
             {
                 path: "/settings",

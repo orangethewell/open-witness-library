@@ -41,3 +41,4 @@ colored = "2"
 tauri-plugin-dialog = "2"
 lru = "0.12"
 tauri-plugin-log = { version = "2", features = ["colored"] }
+tokio = "1.41.1"

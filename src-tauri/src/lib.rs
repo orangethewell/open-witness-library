@@ -1,7 +1,10 @@
 pub mod utils;
 pub mod publib;
 pub mod commands;
+pub mod handlers;
 
+use commands::catalogue::CatalogManager;
+use handlers::catalog::jwpub_media_handler;
 use publib::extension::ChapterContent;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -88,6 +91,30 @@ pub fn run() {
                 ).expect("Couldn't initialize catalog")),
             });
             Ok(())
+        })
+        .register_uri_scheme_protocol("jwpub-media", |ctx, req| {
+            let app = ctx.app_handle();
+            let filename = req.uri().path().replace("/", "");
+            let state = app.state::<CatalogManager>();
+            let mut manager = tauri::async_runtime::block_on(state.catalog.lock());
+
+            match jwpub_media_handler(&mut manager, &filename).map_err(|err| err.to_string()) {
+                Ok(response) => response,
+                Err(err) => {
+                    error!(
+                        target: "jwpub-media::handler",
+                        "Error handling jwpub-media request: {}",
+                        err.red()
+                    );
+                    Response::builder()
+                       .status(500)
+                       .body(
+                        err
+                            .into_bytes()
+                        )
+                       .unwrap()
+                }
+            }
         })
         // .register_uri_scheme_protocol("jwpub-media", |ctx, req| {
         // }) // TODO: Refactor jwpub using discoveries from Document contents

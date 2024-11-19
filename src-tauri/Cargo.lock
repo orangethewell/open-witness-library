@@ -2919,6 +2919,7 @@ dependencies = [
  "tauri-plugin-log",
  "tauri-plugin-shell",
  "tempfile",
+ "tokio",
  "typenum",
  "url",
  "zip",

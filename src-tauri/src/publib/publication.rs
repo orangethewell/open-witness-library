@@ -1,7 +1,8 @@
-use std::{num::NonZero, path::PathBuf};
+use std::{fs, io::Read, num::NonZero, path::PathBuf};
 
 use cbc::Decryptor;
 use aes::{cipher::{generic_array::GenericArray, BlockDecryptMut, BlockSizeUser, KeyIvInit}, Aes128};
+use colored::Colorize;
 use inflate::inflate_bytes_zlib;
 use lru::LruCache;
 use rusqlite::Connection;
@@ -34,12 +35,13 @@ pub struct Publication {
     pub catalog_id: i64,
     db: Connection,
     master_key: Vec<u8>,
+    path: PathBuf,
     decrypted_content_cache: LruCache<(ContentTables, i32), String>
 }
 
 impl Publication {
     pub fn from_database<'a>(database_path: PathBuf, id: i64) -> Result<Self, Box<dyn std::error::Error>> {
-        let db = Connection::open(database_path)?;
+        let db = Connection::open(&database_path)?;
         let master_key: Vec<u8>;
 
         debug!(
@@ -91,8 +93,21 @@ impl Publication {
             catalog_id: id,
             db,
             master_key,
+            path: database_path.clone().parent().unwrap().to_path_buf(),
             decrypted_content_cache: LruCache::new(NonZero::new(5).unwrap())
         })
+    }
+
+    pub fn get_multimedia_data(&self, filename: String) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+        debug!(
+            target: TARGET,
+            "Opening file at {}...",
+            self.path.join(&filename).display().to_string().green()
+        );
+        let mut media_file = fs::File::open(self.path.join(filename))?;
+        let mut data = Vec::new(); 
+        media_file.read_to_end(&mut data)?;
+        Ok(data)
     }
 
     pub fn get_view_items(&self) -> Result<Vec<PublicationViewItem>, Box<dyn std::error::Error>> {

@@ -14,7 +14,10 @@ use tauri::{http::Response, Manager, State};
 
 use tauri_plugin_log::fern::colors::{ColoredLevelConfig, Color};
 #[macro_use]
-use commands::catalogue;
+use commands::{
+    catalogue,
+    settings
+};
 
 #[macro_use]
 extern crate log;
@@ -66,6 +69,8 @@ pub fn run() {
             catalogue::catalog_get_document_by_id,
             catalogue::catalog_get_document_content,
             catalogue::catalog_get_images_of_type,
+
+            settings::settings_set_webview_theme,
         ])
         .setup(|app| {
             let main_window = app.get_webview_window("main").unwrap();

@@ -5,9 +5,18 @@ export default {
             library: 'Library',
             settings: 'Settings',
         },
-        library: {
-            title: "Biblioteca",
+        library_categories: {
             publication_types: {
+                booklets: "Booklets"
+            }
+        },
+        library: {
+            title: "Library",
+            publication_types: {
+                bible: "Bibles",
+                tract: "Tracts and Invitations",
+                index: "Index",
+                kingdom_ministry: "Kingdom Ministry",
                 book: "Books",
                 brochure: "Brochures and booklets",
                 watchtower: "The Watchtower",

@@ -5,9 +5,18 @@ export default {
             library: 'Biblioteca',
             settings: 'Configurações',
         },
+        library_categories: {
+            publication_types: {
+                booklets: "Livretos"
+            }
+        },
         library: {
             title: "Biblioteca",
             publication_types: {
+                bible: "Bíblias",
+                tract: "Convites e tratados",
+                index: "Índice",
+                kingdom_ministry: "Ministério do Reino",
                 book: "Livros",
                 brochure: "Brochuras e livretos",
                 watchtower: "A Sentinela",

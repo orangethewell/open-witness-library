@@ -1,5 +1,12 @@
 export default {
     translations: {
+        home: {
+            welcome: 'Welcome to <i>Open Witness Library</i>',
+            description: "A program for reading and organizing publications that carries the <strong>God's true name</strong>.",
+            disclaimer: "This program doesn't download publications yet, use the official website to download publications and click on <plus_icon /> to install a publication.",
+            download_button: 'Download publications',
+            local_button: 'Access local library'
+        },
         menu: {
             home: 'Home',
             library: 'Library',

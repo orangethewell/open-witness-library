@@ -1,5 +1,12 @@
 export default {
     translations: {
+        home: {
+            welcome: 'Bem-vindo ao <i>Open Witness Library</i>',
+            description: 'Um programa para ler e organizar publicações que carregam o <strong>verdadeiro nome de Deus</strong>.',
+            disclaimer: 'Esse programa não baixa publicações ainda, acesse o site para baixar publicações e clique no <plus_icon /> para instalar a publicação.',
+            download_button: 'Baixar publicações',
+            local_button: 'Acessar biblioteca local'
+        },
         menu: {
             home: 'Início',
             library: 'Biblioteca',

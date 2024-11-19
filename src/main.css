@@ -16,7 +16,7 @@ body {
 }
 
 /* Chrome, Edge and Safari */
-*::-webkit-scrollbar {
+/* *::-webkit-scrollbar {
   height: 6px;
   width: 6px;
 }
@@ -44,7 +44,7 @@ body {
 
 *::-webkit-scrollbar-thumb:active {
   background-color: #8D8D8D;
-}
+} */
 
 .outlet-container {
   padding: 48px;

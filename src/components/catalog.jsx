@@ -27,8 +27,6 @@ const PublicationIcon = ({type, id, alt=""}) => {
 const Catalog = ({ publications }) => {
     const navigate = useNavigate();
 
-    console.log(publications)
-
     const handleClick = (publication) => {
         navigate(`/publication/${publication.jwpub.replace(".jwpub", "")}`);
     };

@@ -14,8 +14,6 @@ const SettingsView = () => {
         i18n.changeLanguage(language)
     }
 
-    console.log(languageList)
-
     return (
         <Box>
             <h1>{t("settings.title")}</h1>

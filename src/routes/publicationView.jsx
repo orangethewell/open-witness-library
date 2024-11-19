@@ -55,7 +55,6 @@ const PublicationView = () => {
         const fetchViewItems = async () => {
             const viewItem = await invoke("catalog_get_publication_view_from", {filenameSymbol: symbol});
             const documents = await fetchDocuments(viewItem.publication_view_items_documents);
-            console.log(viewItem.publication_view_items_documents);
             setViewItems({
                 publication_view_items_documents: documents, 
                 publication_view_items: buildHierarchy(viewItem.publication_view_items)
@@ -72,7 +71,6 @@ const PublicationView = () => {
             });
             documents.push({ ...item, document });
         }
-        console.log(documents);
         return documents;
     }
 
@@ -100,7 +98,6 @@ const PublicationView = () => {
           }
         });
       
-        console.log(hierarchy);
         return hierarchy;
       };
 
@@ -108,7 +105,6 @@ const PublicationView = () => {
         let item = viewItems.publication_view_items_documents.filter((element) => {
             return element.publication_view_item_id === id;
         })[0];
-        console.log(item);
         return item;
     }
 

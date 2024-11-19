@@ -12,7 +12,6 @@ const Home = () => {
     const handleClick = async () => {
         let publication_data = await invoke("catalog_get_list_from_type", {publicationType: "Book"})
         setPublications(publication_data);
-        console.log(publications);  // Debugging purposes only
     };
 
     const addPublication = async () => {

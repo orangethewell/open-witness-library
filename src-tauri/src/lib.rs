@@ -1,7 +1,7 @@
-pub mod utils;
-pub mod publib;
 pub mod commands;
 pub mod handlers;
+pub mod publib;
+pub mod utils;
 
 use commands::catalogue::CatalogManager;
 use handlers::catalog::jwpub_media_handler;
@@ -12,12 +12,9 @@ use std::fs;
 use tauri::async_runtime::Mutex;
 use tauri::{http::Response, Manager, State};
 
-use tauri_plugin_log::fern::colors::{ColoredLevelConfig, Color};
+use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
 #[macro_use]
-use commands::{
-    catalogue,
-    settings
-};
+use commands::{catalogue, settings};
 
 #[macro_use]
 extern crate log;
@@ -47,17 +44,25 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_log::Builder::new()
-            .format(move |out, message, record| {
-                out.finish(format_args!(
-                    "{} - [{}][{}] {}",
-                    chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
-                    colors.color(record.level()),
-                    {if record.target().len() > 0 {record.target()} else {"open-witness-library"}}.magenta(),
-                    message
-                ))
-            })
-            .build()
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .format(move |out, message, record| {
+                    out.finish(format_args!(
+                        "{} - [{}][{}] {}",
+                        chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+                        colors.color(record.level()),
+                        {
+                            if record.target().len() > 0 {
+                                record.target()
+                            } else {
+                                "open-witness-library"
+                            }
+                        }
+                        .magenta(),
+                        message
+                    ))
+                })
+                .build(),
         )
         .invoke_handler(tauri::generate_handler![
             catalogue::catalog_install_jwpub_file,
@@ -69,7 +74,6 @@ pub fn run() {
             catalogue::catalog_get_document_by_id,
             catalogue::catalog_get_document_content,
             catalogue::catalog_get_images_of_type,
-
             settings::settings_set_webview_theme,
         ])
         .setup(|app| {
@@ -87,13 +91,16 @@ pub fn run() {
                     .green()
             );
             app.manage(catalogue::CatalogManager {
-                catalog: Mutex::new(publib::Catalog::init(
-                    app.path()
-                        .local_data_dir()
-                        .unwrap()
-                        .join("open-witness-library")
-                        .join("publications"),
-                ).expect("Couldn't initialize catalog")),
+                catalog: Mutex::new(
+                    publib::Catalog::init(
+                        app.path()
+                            .local_data_dir()
+                            .unwrap()
+                            .join("open-witness-library")
+                            .join("publications"),
+                    )
+                    .expect("Couldn't initialize catalog"),
+                ),
             });
             Ok(())
         })
@@ -112,12 +119,9 @@ pub fn run() {
                         err.red()
                     );
                     Response::builder()
-                       .status(500)
-                       .body(
-                        err
-                            .into_bytes()
-                        )
-                       .unwrap()
+                        .status(500)
+                        .body(err.into_bytes())
+                        .unwrap()
                 }
             }
         })

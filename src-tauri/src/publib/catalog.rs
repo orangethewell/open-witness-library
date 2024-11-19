@@ -1,5 +1,8 @@
 use std::{
-    fs, io::{self, Cursor, Read}, num::NonZero, path::PathBuf
+    fs,
+    io::{self, Cursor, Read},
+    num::NonZero,
+    path::PathBuf,
 };
 
 use chrono::NaiveDateTime;
@@ -11,7 +14,10 @@ use zip::ZipArchive;
 
 use crate::utils::unpack_zip;
 
-use super::{manifest::{Image, IssueProperties}, Manifest, Publication};
+use super::{
+    manifest::{Image, IssueProperties},
+    Manifest, Publication,
+};
 
 const TARGET: &'static str = "catalog";
 
@@ -20,7 +26,7 @@ pub struct Catalog {
     catalog_db: Connection,
 
     current_open: String,
-    publication_cache: LruCache<String, Publication>
+    publication_cache: LruCache<String, Publication>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -76,7 +82,7 @@ pub struct CollectionImage {
     pub path: String,
     pub width: i32,
     pub height: i32,
-    pub signature: String
+    pub signature: String,
 }
 
 impl Catalog {
@@ -89,10 +95,10 @@ impl Catalog {
         }
 
         let db = Connection::open(location.join("collections.db"))?;
-        
+
         debug!(target: TARGET,  "initializing \"{}\" table...", "Publication".magenta());
         db.execute(
-        "CREATE TABLE IF NOT EXISTS Publication (
+            "CREATE TABLE IF NOT EXISTS Publication (
                 PublicationId INTEGER PRIMARY KEY AUTOINCREMENT,
                 
                 LanguageIndex INTEGER NOT NULL,
@@ -232,7 +238,7 @@ impl Catalog {
 
         debug!(target: TARGET, "initializing \"{}\" table...", "AvailableBibleBook".magenta());
         db.execute(
-        "CREATE TABLE IF NOT EXISTS AvailableBibleBook (
+            "CREATE TABLE IF NOT EXISTS AvailableBibleBook (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 PublicationId INTEGER NOT NULL,
                 Book TEXT NOT NULL,
@@ -240,7 +246,7 @@ impl Catalog {
                 UNIQUE(PublicationId,Book)
                 FOREIGN KEY (PublicationId) REFERENCES Publication(PublicationId)
             )",
-            ()
+            (),
         )?;
 
         debug!(target: TARGET, "Catalog initialized at {}!", location.display().to_string().green());
@@ -253,7 +259,15 @@ impl Catalog {
         })
     }
 
-    pub fn update_metadata_for_publication(&mut self, id: i64, pub_manifest: &Manifest, first_dated_text_offset: Option<i32>, last_dated_text_offset: Option<i32>, database_path: String, on_external_storage: Option<i32>) -> Result<i64, Box<dyn std::error::Error>> {
+    pub fn update_metadata_for_publication(
+        &mut self,
+        id: i64,
+        pub_manifest: &Manifest,
+        first_dated_text_offset: Option<i32>,
+        last_dated_text_offset: Option<i32>,
+        database_path: String,
+        on_external_storage: Option<i32>,
+    ) -> Result<i64, Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "UPDATE Publication SET
                 LanguageIndex = ?1,
@@ -288,47 +302,40 @@ impl Catalog {
             params![
                 &pub_manifest.publication.language,
                 &pub_manifest.publication.publication_type,
-                {if pub_manifest.publication.categories.len() > 1 {
-                    "Unknown"
-                } else {
-                    &pub_manifest.publication.categories[0]
-                }},
-
+                {
+                    if pub_manifest.publication.categories.len() > 1 {
+                        "Unknown"
+                    } else {
+                        &pub_manifest.publication.categories[0]
+                    }
+                },
                 &pub_manifest.publication.title,
                 &pub_manifest.publication.short_title,
                 &pub_manifest.publication.display_title,
-
                 &pub_manifest.publication.symbol,
                 &pub_manifest.publication.unique_english_symbol,
-
                 &pub_manifest.publication.year,
                 0, // Volume number
                 &pub_manifest.publication.issue_number,
                 first_dated_text_offset.unwrap_or(19691231),
                 last_dated_text_offset.unwrap_or(19691231),
-
                 &pub_manifest.publication.root_symbol,
                 &pub_manifest.publication.root_year,
                 &pub_manifest.publication.root_language,
-
                 &pub_manifest.publication.schema_version,
                 &pub_manifest.publication.schema_version,
-
                 &pub_manifest.hash,
                 &pub_manifest.timestamp,
                 &pub_manifest.name,
-
                 &database_path,
-                
                 on_external_storage.unwrap_or(0),
                 &pub_manifest.publication.undated_reference_title,
-
                 &pub_manifest.expanded_size,
                 &pub_manifest.publication.min_platform_version,
                 &pub_manifest.publication.undated_symbol,
                 &pub_manifest.meps_build_number,
                 id
-            ]
+            ],
         )?;
 
         let pub_id = self.catalog_db.last_insert_rowid();
@@ -338,7 +345,14 @@ impl Catalog {
         Ok(pub_id)
     }
 
-    pub fn insert_metadata_for_publication(&mut self, pub_manifest: &Manifest, first_dated_text_offset: Option<i32>, last_dated_text_offset: Option<i32>, database_path: String, on_external_storage: Option<i32>) -> Result<i64, Box<dyn std::error::Error>> {
+    pub fn insert_metadata_for_publication(
+        &mut self,
+        pub_manifest: &Manifest,
+        first_dated_text_offset: Option<i32>,
+        last_dated_text_offset: Option<i32>,
+        database_path: String,
+        on_external_storage: Option<i32>,
+    ) -> Result<i64, Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "INSERT INTO Publication (
                 LanguageIndex,
@@ -404,7 +418,6 @@ impl Catalog {
                 &pub_manifest.name,
 
                 &database_path,
-                
                 on_external_storage.unwrap_or(0),
                 &pub_manifest.publication.undated_reference_title,
 
@@ -422,12 +435,16 @@ impl Catalog {
         Ok(pub_id)
     }
 
-    pub fn delete_attribute_for_publication<'a>(&mut self, id: i64, attribute: &'a str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn delete_attribute_for_publication<'a>(
+        &mut self,
+        id: i64,
+        attribute: &'a str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "DELETE FROM PublicationAttribute WHERE 
                 PublicationId=?1 AND
-                Attribute=?2", 
-            params![id, attribute]
+                Attribute=?2",
+            params![id, attribute],
         )?;
 
         debug!(target: TARGET, "Attribute \"{}\" deleted for publication ID {}.", attribute.bright_yellow(), id.to_string().bold());
@@ -435,13 +452,17 @@ impl Catalog {
         Ok(())
     }
 
-    pub fn insert_attribute_for_publication<'a>(&mut self, id: i64, attribute: &'a str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn insert_attribute_for_publication<'a>(
+        &mut self,
+        id: i64,
+        attribute: &'a str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "INSERT INTO PublicationAttribute (
                 PublicationId,
                 Attribute
-            ) VALUES (?1,?2)", 
-            params![id, attribute]
+            ) VALUES (?1,?2)",
+            params![id, attribute],
         )?;
 
         debug!(target: TARGET, "Attribute \"{}\" added to publication ID {}!", attribute.bright_yellow(), id.to_string().bold());
@@ -449,12 +470,16 @@ impl Catalog {
         Ok(())
     }
 
-    pub fn delete_issue_attribute_for_publication<'a>(&mut self, id: i64, attribute: &'a str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn delete_issue_attribute_for_publication<'a>(
+        &mut self,
+        id: i64,
+        attribute: &'a str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "DELETE FROM PublicationIssueAttribute WHERE
                 PublicationId=?1 AND
-                Attribute=?2", 
-            params![id, attribute]
+                Attribute=?2",
+            params![id, attribute],
         )?;
 
         debug!(target: TARGET, "Issue attribute \"{}\" deleted from publication ID {}.", attribute.bright_yellow(), id.to_string().bold());
@@ -462,13 +487,17 @@ impl Catalog {
         Ok(())
     }
 
-    pub fn insert_issue_attribute_for_publication<'a>(&mut self, id: i64, attribute: &'a str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn insert_issue_attribute_for_publication<'a>(
+        &mut self,
+        id: i64,
+        attribute: &'a str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "INSERT INTO PublicationIssueAttribute (
                 PublicationId,
                 Attribute
-            ) VALUES (?1,?2)", 
-            params![id, attribute]
+            ) VALUES (?1,?2)",
+            params![id, attribute],
         )?;
 
         debug!(target: TARGET, "Issue attribute \"{}\" added to publication ID {}!", attribute.bright_yellow(), id.to_string().bold());
@@ -476,15 +505,16 @@ impl Catalog {
         Ok(())
     }
 
-    pub fn delete_issue_property_for_publication(&mut self, id: i64, property: &IssueProperties) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn delete_issue_property_for_publication(
+        &mut self,
+        id: i64,
+        property: &IssueProperties,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "DELETE FROM PublicationIssueProperty WHERE
                 PublicationId=?1 AND
-                Symbol=?2", 
-            params![
-                id, 
-                &property.symbol,
-            ]
+                Symbol=?2",
+            params![id, &property.symbol,],
         )?;
 
         debug!(target: TARGET, "Issue properties deleted from publication ID {}.", id.to_string().bold());
@@ -492,7 +522,11 @@ impl Catalog {
         Ok(())
     }
 
-    pub fn insert_issue_property_for_publication(&mut self, id: i64, property: &IssueProperties) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn insert_issue_property_for_publication(
+        &mut self,
+        id: i64,
+        property: &IssueProperties,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "INSERT INTO PublicationIssueProperty (
                 PublicationId,
@@ -501,16 +535,15 @@ impl Catalog {
                 CoverTitle,
                 Symbol,
                 UndatedSymbol
-            ) VALUES (?1,?2,?3,?4,?5,?6)", 
+            ) VALUES (?1,?2,?3,?4,?5,?6)",
             params![
-                id, 
+                id,
                 &property.title,
                 &property.undated_title,
                 &property.cover_title,
-
                 &property.symbol,
                 &property.undated_symbol,
-            ]
+            ],
         )?;
 
         debug!(target: TARGET, "Issue properties with cover title \"{}\" added to publication ID {}!", property.cover_title.bright_yellow(), id.to_string().bold());
@@ -518,23 +551,30 @@ impl Catalog {
         Ok(())
     }
 
-    pub fn delete_image_for_publication(&mut self, id: i64, image: &Image, path: String) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn delete_image_for_publication(
+        &mut self,
+        id: i64,
+        image: &Image,
+        path: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "DELETE FROM Image WHERE
                 PublicationId=?1 AND
-                Signature=?2", 
-            params![
-                id,
-                &image.signature,
-            ]
+                Signature=?2",
+            params![id, &image.signature,],
         )?;
-        
+
         debug!(target: TARGET, "Media path \"{}\" removed from Image table: publication ID {}.", path.bright_yellow(), id.to_string().bold());
 
         Ok(())
     }
 
-    pub fn insert_image_for_publication(&mut self, id: i64, image: &Image, path: String) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn insert_image_for_publication(
+        &mut self,
+        id: i64,
+        image: &Image,
+        path: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.catalog_db.execute(
             "INSERT INTO Image (
                 PublicationId,
@@ -544,7 +584,7 @@ impl Catalog {
                 Width,
                 Height,
                 Signature
-            ) VALUES (?1,?2,?3,?4,?5,?6,?7)", 
+            ) VALUES (?1,?2,?3,?4,?5,?6,?7)",
             params![
                 id,
                 &image.image_type,
@@ -553,7 +593,7 @@ impl Catalog {
                 image.width,
                 image.height,
                 &image.signature,
-            ]
+            ],
         )?;
 
         debug!(target: TARGET, "Media path \"{}\" added to Image table: publication ID {}!", path.bright_yellow(), id.to_string().bold());
@@ -561,18 +601,23 @@ impl Catalog {
         Ok(())
     }
 
-    pub fn remove_indexed_dated_texts(&mut self, publication: &mut Publication) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn remove_indexed_dated_texts(
+        &mut self,
+        publication: &mut Publication,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let dated_texts = publication.get_dated_texts()?;
 
         for dated_text in dated_texts.iter() {
-            let document = publication.get_document_by_id(dated_text.document_id)?.unwrap_or_default();
+            let document = publication
+                .get_document_by_id(dated_text.document_id)?
+                .unwrap_or_default();
 
             debug!(
-                target: TARGET, 
-                "Removing indexed dated text (Start: \"{}\"; End: \"{}\") for publication ID {}... (Class {})", 
-                dated_text.first_date_offset.to_string().bright_blue(), 
-                dated_text.last_date_offset.to_string().bright_blue(), 
-                publication.catalog_id.to_string().bold(), 
+                target: TARGET,
+                "Removing indexed dated text (Start: \"{}\"; End: \"{}\") for publication ID {}... (Class {})",
+                dated_text.first_date_offset.to_string().bright_blue(),
+                dated_text.last_date_offset.to_string().bright_blue(),
+                publication.catalog_id.to_string().bold(),
                 document.class.to_string().yellow()
             );
 
@@ -581,31 +626,36 @@ impl Catalog {
                     PublicationId=?1 AND
                     Start=?2 AND
                     End=?3 AND
-                    Class=?4", 
+                    Class=?4",
                 params![
                     publication.catalog_id,
                     dated_text.first_date_offset,
                     dated_text.last_date_offset,
                     document.class
-                ]
+                ],
             )?;
         }
 
         Ok(())
     }
 
-    fn index_dated_texts(&mut self, publication: &mut Publication) -> Result<(), Box<dyn std::error::Error>> {
+    fn index_dated_texts(
+        &mut self,
+        publication: &mut Publication,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let dated_texts = publication.get_dated_texts()?;
 
         for dated_text in dated_texts.iter() {
-            let document = publication.get_document_by_id(dated_text.document_id)?.unwrap_or_default();
+            let document = publication
+                .get_document_by_id(dated_text.document_id)?
+                .unwrap_or_default();
 
             debug!(
-                target: TARGET, 
-                "Indexing dated text (Start: \"{}\"; End: \"{}\") for publication ID {}... (Class {})", 
-                dated_text.first_date_offset.to_string().bright_blue(), 
-                dated_text.last_date_offset.to_string().bright_blue(), 
-                publication.catalog_id.to_string().bold(), 
+                target: TARGET,
+                "Indexing dated text (Start: \"{}\"; End: \"{}\") for publication ID {}... (Class {})",
+                dated_text.first_date_offset.to_string().bright_blue(),
+                dated_text.last_date_offset.to_string().bright_blue(),
+                publication.catalog_id.to_string().bold(),
                 document.class.to_string().yellow()
             );
 
@@ -615,28 +665,31 @@ impl Catalog {
                     Start,
                     End,
                     Class
-                ) VALUES (?1,?2,?3,?4)", 
+                ) VALUES (?1,?2,?3,?4)",
                 params![
                     publication.catalog_id,
                     dated_text.first_date_offset,
                     dated_text.last_date_offset,
                     document.class
-                ]
+                ],
             )?;
         }
 
         Ok(())
     }
 
-    fn remove_indexed_documents(&mut self, publication: &mut Publication) -> Result<(), Box<dyn std::error::Error>> {
+    fn remove_indexed_documents(
+        &mut self,
+        publication: &mut Publication,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let documents = publication.get_documents()?;
 
         for document in documents.iter() {
             debug!(
-                target: TARGET, 
-                "Removing indexed document (MepsDocumentId: \"{}\") for publication ID {}... (Lang {})", 
-                document.meps_document_id.to_string().bright_blue(),  
-                publication.catalog_id.to_string().bold(), 
+                target: TARGET,
+                "Removing indexed document (MepsDocumentId: \"{}\") for publication ID {}... (Lang {})",
+                document.meps_document_id.to_string().bright_blue(),
+                publication.catalog_id.to_string().bold(),
                 document.meps_language_id.to_string().yellow()
             );
 
@@ -644,27 +697,30 @@ impl Catalog {
                 "DELETE FROM Document WHERE
                     LanguageIndex=?1 AND
                     MepsDocumentId=?2 AND
-                    PublicationId=?3", 
+                    PublicationId=?3",
                 params![
                     document.meps_language_id,
                     document.meps_document_id,
                     publication.catalog_id
-                ]
+                ],
             )?;
         }
 
         Ok(())
     }
 
-    fn index_documents(&mut self, publication: &mut Publication) -> Result<(), Box<dyn std::error::Error>> {
+    fn index_documents(
+        &mut self,
+        publication: &mut Publication,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let documents = publication.get_documents()?;
 
         for document in documents.iter() {
             debug!(
-                target: TARGET, 
-                "Indexing document (MepsDocumentId: \"{}\") for publication ID {}... (Lang {})", 
-                document.meps_document_id.to_string().bright_blue(),  
-                publication.catalog_id.to_string().bold(), 
+                target: TARGET,
+                "Indexing document (MepsDocumentId: \"{}\") for publication ID {}... (Lang {})",
+                document.meps_document_id.to_string().bright_blue(),
+                publication.catalog_id.to_string().bold(),
                 document.meps_language_id.to_string().yellow()
             );
 
@@ -673,18 +729,18 @@ impl Catalog {
                     LanguageIndex,
                     MepsDocumentId,
                     PublicationId
-                ) VALUES (?1,?2,?3)", 
+                ) VALUES (?1,?2,?3)",
                 params![
                     document.meps_language_id,
                     document.meps_document_id,
                     publication.catalog_id
-                ]
+                ],
             )?;
         }
 
         Ok(())
     }
-    
+
     pub fn install_jwpub_file<T: Into<PathBuf>>(
         &mut self,
         file_path: T,
@@ -692,7 +748,7 @@ impl Catalog {
         let file_path: PathBuf = file_path.into();
 
         info!(target: TARGET, "Installing {}...", file_path.display().to_string().bright_magenta());
-        
+
         let package = fs::File::open(&file_path)?;
         let reader = io::BufReader::new(package);
         let mut package = ZipArchive::new(reader)?;
@@ -703,15 +759,23 @@ impl Catalog {
 
         debug!(target: TARGET, "Checking if JWPUB doesn't match with any publication installed...");
         let mut existing_id = None;
-        if let Some(publication_data) = self.get_publication_collection_meta(&manifest.name.replace(".jwpub", ""))? {
-            let new_timestamp = NaiveDateTime::parse_from_str(&manifest.timestamp, "%Y-%m-%dT%H:%M:%SZ")?;
-            let cur_timestamp = NaiveDateTime::parse_from_str(&publication_data.timestamp, "%Y-%m-%dT%H:%M:%SZ")?;
+        if let Some(publication_data) =
+            self.get_publication_collection_meta(&manifest.name.replace(".jwpub", ""))?
+        {
+            let new_timestamp =
+                NaiveDateTime::parse_from_str(&manifest.timestamp, "%Y-%m-%dT%H:%M:%SZ")?;
+            let cur_timestamp =
+                NaiveDateTime::parse_from_str(&publication_data.timestamp, "%Y-%m-%dT%H:%M:%SZ")?;
 
             existing_id = Some(publication_data.id);
-            
+
             if cur_timestamp >= new_timestamp {
                 error!(target: TARGET, "Publication {} is newer or the same than the installed version.", manifest.name.replace(".jwpub", ""));
-                return Err(format!("Publication {} is newer or the same than the installed version.", manifest.name.replace(".jwpub", "")).into());
+                return Err(format!(
+                    "Publication {} is newer or the same than the installed version.",
+                    manifest.name.replace(".jwpub", "")
+                )
+                .into());
             }
         }
 
@@ -728,13 +792,14 @@ impl Catalog {
 
         debug!(target: TARGET, "Extracting contents...");
         unpack_zip(content_package, &location);
-        
+
         debug!(target: TARGET, "Copying manifest.json...");
         let manifest_file = fs::File::create(location.join("manifest.json"))?;
         serde_json::to_writer_pretty(manifest_file, &manifest)?;
 
         info!(target: TARGET, "Indexing data to catalog...");
-        let mut tmp_publication = Publication::from_database(location.join(&manifest.publication.file_name), -1)?;
+        let mut tmp_publication =
+            Publication::from_database(location.join(&manifest.publication.file_name), -1)?;
         let mut first_dated_text_offset = None;
         let mut last_dated_text_offset = None;
 
@@ -746,21 +811,29 @@ impl Catalog {
 
         let publication_id = if let Some(id) = existing_id {
             self.update_metadata_for_publication(
-                id as i64, 
-                &manifest, 
-                first_dated_text_offset, 
-                last_dated_text_offset, 
-                location.join(&manifest.publication.file_name).to_str().unwrap().to_owned(), 
-                None
+                id as i64,
+                &manifest,
+                first_dated_text_offset,
+                last_dated_text_offset,
+                location
+                    .join(&manifest.publication.file_name)
+                    .to_str()
+                    .unwrap()
+                    .to_owned(),
+                None,
             )?;
             id as i64
         } else {
             self.insert_metadata_for_publication(
-                &manifest, 
-                first_dated_text_offset, 
-                last_dated_text_offset, 
-                location.join(&manifest.publication.file_name).to_str().unwrap().to_owned(), 
-                None
+                &manifest,
+                first_dated_text_offset,
+                last_dated_text_offset,
+                location
+                    .join(&manifest.publication.file_name)
+                    .to_str()
+                    .unwrap()
+                    .to_owned(),
+                None,
             )?
         };
 
@@ -778,25 +851,45 @@ impl Catalog {
         if manifest.publication.issue_attributes.len() > 0 {
             for issue_attribute in manifest.publication.issue_attributes.iter() {
                 if existing_id.is_some() {
-                    self.delete_issue_attribute_for_publication(tmp_publication.catalog_id, issue_attribute)?;
+                    self.delete_issue_attribute_for_publication(
+                        tmp_publication.catalog_id,
+                        issue_attribute,
+                    )?;
                 }
-                self.insert_issue_attribute_for_publication(tmp_publication.catalog_id, issue_attribute)?;
+                self.insert_issue_attribute_for_publication(
+                    tmp_publication.catalog_id,
+                    issue_attribute,
+                )?;
             }
         }
 
         if !manifest.publication.issue_properties.symbol.is_empty() {
             if existing_id.is_some() {
-                self.delete_issue_property_for_publication(tmp_publication.catalog_id, &manifest.publication.issue_properties)?;
+                self.delete_issue_property_for_publication(
+                    tmp_publication.catalog_id,
+                    &manifest.publication.issue_properties,
+                )?;
             }
-            self.insert_issue_property_for_publication(tmp_publication.catalog_id, &manifest.publication.issue_properties)?;
+            self.insert_issue_property_for_publication(
+                tmp_publication.catalog_id,
+                &manifest.publication.issue_properties,
+            )?;
         }
 
         if manifest.publication.images.len() > 0 {
             for image in manifest.publication.images.iter() {
                 if existing_id.is_some() {
-                    self.delete_image_for_publication(tmp_publication.catalog_id, image, location.join(&image.file_name).to_str().unwrap().to_owned())?;
+                    self.delete_image_for_publication(
+                        tmp_publication.catalog_id,
+                        image,
+                        location.join(&image.file_name).to_str().unwrap().to_owned(),
+                    )?;
                 }
-                self.insert_image_for_publication(tmp_publication.catalog_id, image, location.join(&image.file_name).to_str().unwrap().to_owned())?;
+                self.insert_image_for_publication(
+                    tmp_publication.catalog_id,
+                    image,
+                    location.join(&image.file_name).to_str().unwrap().to_owned(),
+                )?;
             }
         }
 
@@ -813,9 +906,9 @@ impl Catalog {
         self.index_documents(&mut tmp_publication)?;
 
         info!(
-            target: TARGET, 
-            "publication ID {} installed at {}!", 
-            tmp_publication.catalog_id.to_string().bold(), 
+            target: TARGET,
+            "publication ID {} installed at {}!",
+            tmp_publication.catalog_id.to_string().bold(),
             location.display().to_string().green()
         );
 
@@ -827,10 +920,8 @@ impl Catalog {
         image_type: &'a str,
         publication_id: i64,
     ) -> Result<Vec<CollectionImage>, Box<dyn std::error::Error>> {
-        let mut stmt = self
-           .catalog_db
-           .prepare(
-                "SELECT
+        let mut stmt = self.catalog_db.prepare(
+            "SELECT
                     ImageId,
                     PublicationId,
                     Type,
@@ -840,7 +931,7 @@ impl Catalog {
                     Height,
                     Signature
                 FROM Image
-            WHERE PublicationId =?1 AND Type =?2"
+            WHERE PublicationId =?1 AND Type =?2",
         )?;
         let mut rows = stmt.query(params![publication_id, image_type])?;
         let mut images = Vec::new();
@@ -858,7 +949,7 @@ impl Catalog {
 
             images.push(image);
         }
-        
+
         Ok(images)
     }
 
@@ -866,24 +957,21 @@ impl Catalog {
         &self,
         publication_type: &str,
     ) -> Result<i32, Box<dyn std::error::Error>> {
-        let mut stmt = self
-            .catalog_db
-            .prepare("SELECT
+        let mut stmt = self.catalog_db.prepare(
+            "SELECT
                 COUNT(PublicationId)
-            FROM Publication WHERE PublicationType=?1")?;
-        
-        Ok(stmt.query_row([publication_type], |row| {
-            Ok(row.get(0)?)
-        })?)
+            FROM Publication WHERE PublicationType=?1",
+        )?;
+
+        Ok(stmt.query_row([publication_type], |row| Ok(row.get(0)?))?)
     }
 
     pub fn get_list_from_type(
         &self,
         publication_type: &str,
     ) -> Result<Vec<CollectionPublication>, Box<dyn std::error::Error>> {
-        let mut stmt = self
-            .catalog_db
-            .prepare("SELECT
+        let mut stmt = self.catalog_db.prepare(
+            "SELECT
                 PublicationId,
                 LanguageIndex,
                 PublicationType,
@@ -920,7 +1008,8 @@ impl Catalog {
                 MinPlatformVersion,
                 KeySymbol,
                 MepsBuildNumber
-            FROM Publication WHERE PublicationType=?1")?;
+            FROM Publication WHERE PublicationType=?1",
+        )?;
         let mut rows = stmt.query([publication_type])?;
         let mut pub_collection = Vec::new();
         while let Some(row) = rows.next()? {
@@ -953,7 +1042,7 @@ impl Catalog {
                 expanded_size: row.get(25)?,
                 min_platform_version: row.get(26)?,
                 key_symbol: row.get(27)?,
-                meps_build_number: row.get(28)?
+                meps_build_number: row.get(28)?,
             })
         }
 
@@ -966,9 +1055,8 @@ impl Catalog {
         &self,
         filename_symbol: &str,
     ) -> Result<Option<CollectionPublication>, Box<dyn std::error::Error>> {
-        let mut stmt = self
-            .catalog_db
-            .prepare("SELECT
+        let mut stmt = self.catalog_db.prepare(
+            "SELECT
                 PublicationId,
                 LanguageIndex,
                 PublicationType,
@@ -1005,7 +1093,8 @@ impl Catalog {
                 MinPlatformVersion,
                 KeySymbol,
                 MepsBuildNumber
-            FROM Publication WHERE JwPub=?1")?;
+            FROM Publication WHERE JwPub=?1",
+        )?;
         let mut rows = stmt.query([format!("{}.jwpub", filename_symbol)])?;
         if let Some(row) = rows.next()? {
             return Ok(Some(CollectionPublication {
@@ -1037,8 +1126,8 @@ impl Catalog {
                 expanded_size: row.get(25)?,
                 min_platform_version: row.get(26)?,
                 key_symbol: row.get(27)?,
-                meps_build_number: row.get(28)?
-            }))
+                meps_build_number: row.get(28)?,
+            }));
         }
 
         Ok(None)
@@ -1048,21 +1137,29 @@ impl Catalog {
         self.publication_cache.get_mut(&self.current_open)
     }
 
-    pub fn open_publication_connection(&mut self, filename_symbol: String) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn open_publication_connection(
+        &mut self,
+        filename_symbol: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(_publication) = self.publication_cache.get(&filename_symbol) {
             debug!(target: TARGET, "Reopening connection with \"{}\"...", filename_symbol);
             self.current_open = filename_symbol.clone();
-            return Ok(())
+            return Ok(());
         }
 
-        if let Some(publication_metadata) = self.get_publication_collection_meta(&filename_symbol)? {
+        if let Some(publication_metadata) =
+            self.get_publication_collection_meta(&filename_symbol)?
+        {
             debug!(target: TARGET, "Opening connection with \"{}\"...", filename_symbol);
-            let publication = Publication::from_database(PathBuf::from(publication_metadata.database_path), publication_metadata.id as i64)?;
+            let publication = Publication::from_database(
+                PathBuf::from(publication_metadata.database_path),
+                publication_metadata.id as i64,
+            )?;
             debug!(target: TARGET, "Caching connection...");
             self.publication_cache.put(filename_symbol, publication);
-            return Ok(())
+            return Ok(());
         }
-        
+
         error!(target: TARGET, "Publication requested doesn't exist.");
         Err("Publication not found in catalog".into())
     }

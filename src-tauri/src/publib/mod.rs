@@ -12,5 +12,3 @@ pub mod tables;
 
 pub mod catalog;
 pub use catalog::Catalog;
-
-

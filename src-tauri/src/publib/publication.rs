@@ -1,12 +1,15 @@
 use std::{fs, io::Read, num::NonZero, path::PathBuf};
 
+use aes::{
+    cipher::{generic_array::GenericArray, BlockDecryptMut, BlockSizeUser, KeyIvInit},
+    Aes128,
+};
 use cbc::Decryptor;
-use aes::{cipher::{generic_array::GenericArray, BlockDecryptMut, BlockSizeUser, KeyIvInit}, Aes128};
 use colored::Colorize;
 use inflate::inflate_bytes_zlib;
 use lru::LruCache;
 use rusqlite::Connection;
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 use super::tables::*;
 
@@ -36,11 +39,14 @@ pub struct Publication {
     db: Connection,
     master_key: Vec<u8>,
     path: PathBuf,
-    decrypted_content_cache: LruCache<(ContentTables, i32), String>
+    decrypted_content_cache: LruCache<(ContentTables, i32), String>,
 }
 
 impl Publication {
-    pub fn from_database<'a>(database_path: PathBuf, id: i64) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn from_database<'a>(
+        database_path: PathBuf,
+        id: i64,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let db = Connection::open(&database_path)?;
         let master_key: Vec<u8>;
 
@@ -49,19 +55,19 @@ impl Publication {
             "Forging master key for decryption jobs..."
         );
         {
-            let mut stmt = db
-                .prepare("SELECT MepsLanguageIndex, Symbol, Year, IssueTagNumber FROM Publication")?;
+            let mut stmt = db.prepare(
+                "SELECT MepsLanguageIndex, Symbol, Year, IssueTagNumber FROM Publication",
+            )?;
 
-            let (meps_language_index, 
-                symbol, 
-                year, 
-                issue_tag_number
-            ) = stmt.query_row([], |row| Ok((
-                row.get::<_, i32>(0)?,
-                row.get::<_, String>(1)?,
-                row.get::<_, i32>(2)?,
-                row.get::<_, String>(3)?,
-            )))?;
+            let (meps_language_index, symbol, year, issue_tag_number) =
+                stmt.query_row([], |row| {
+                    Ok((
+                        row.get::<_, i32>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, i32>(2)?,
+                        row.get::<_, String>(3)?,
+                    ))
+                })?;
 
             let key_string = if issue_tag_number == "0" {
                 String::from(format!("{}_{}_{}", meps_language_index, symbol, year))
@@ -75,7 +81,9 @@ impl Publication {
             let mut hasher = Sha256::new();
             hasher.update(key_string.as_bytes());
             let key_part1 = hasher.finalize().to_vec();
-            let key_part2 = hex::decode("11cbb5587e32846d4c26790c633da289f66fe5842a3a585ce1bc3a294af5ada7").unwrap();
+            let key_part2 =
+                hex::decode("11cbb5587e32846d4c26790c633da289f66fe5842a3a585ce1bc3a294af5ada7")
+                    .unwrap();
 
             master_key = key_part1
                 .iter()
@@ -94,25 +102,29 @@ impl Publication {
             db,
             master_key,
             path: database_path.clone().parent().unwrap().to_path_buf(),
-            decrypted_content_cache: LruCache::new(NonZero::new(5).unwrap())
+            decrypted_content_cache: LruCache::new(NonZero::new(5).unwrap()),
         })
     }
 
-    pub fn get_multimedia_data(&self, filename: String) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    pub fn get_multimedia_data(
+        &self,
+        filename: String,
+    ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
         debug!(
             target: TARGET,
             "Opening file at {}...",
             self.path.join(&filename).display().to_string().green()
         );
         let mut media_file = fs::File::open(self.path.join(filename))?;
-        let mut data = Vec::new(); 
+        let mut data = Vec::new();
         media_file.read_to_end(&mut data)?;
         Ok(data)
     }
 
     pub fn get_view_items(&self) -> Result<Vec<PublicationViewItem>, Box<dyn std::error::Error>> {
         let mut fallback = false;
-        let mut stmt = match self.db.prepare("SELECT
+        let mut stmt = match self.db.prepare(
+            "SELECT
             PublicationViewItemId,
             PublicationViewId,
             ParentPublicationViewItemId,
@@ -121,7 +133,8 @@ impl Publication {
             SchemaType,
             ChildTemplateSchemaType,
             DefaultDocumentId
-        FROM PublicationViewItem") {
+        FROM PublicationViewItem",
+        ) {
             Ok(stmt) => stmt,
             Err(_) => {
                 fallback = true;
@@ -129,7 +142,8 @@ impl Publication {
                     target: TARGET,
                     "Falling back to deprecated PublicationViewItem table."
                 );
-                self.db.prepare("SELECT
+                self.db.prepare(
+                    "SELECT
                     PublicationViewItemId,
                     PublicationViewId,
                     ParentPublicationViewItemId,
@@ -137,7 +151,8 @@ impl Publication {
                     SchemaType,
                     ChildTemplateSchemaType,
                     DefaultDocumentId
-                FROM PublicationViewItem")?
+                FROM PublicationViewItem",
+                )?
             }
         };
         let mut rows = stmt.query([])?;
@@ -174,12 +189,16 @@ impl Publication {
         Ok(view_items)
     }
 
-    pub fn get_view_items_documents(&self) -> Result<Vec<PublicationViewItemDocument>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT 
+    pub fn get_view_items_documents(
+        &self,
+    ) -> Result<Vec<PublicationViewItemDocument>, Box<dyn std::error::Error>> {
+        let mut stmt = self.db.prepare(
+            "SELECT 
             PublicationViewItemDocumentId,
             PublicationViewItemId,
             DocumentId
-        FROM PublicationViewItemDocument")?;
+        FROM PublicationViewItemDocument",
+        )?;
         let mut rows = stmt.query([])?;
 
         let mut documents = vec![];
@@ -199,7 +218,8 @@ impl Publication {
 
     pub fn get_documents(&mut self) -> Result<Vec<Document>, Box<dyn std::error::Error>> {
         let mut fallback = false;
-        let mut stmt = match self.db.prepare("SELECT
+        let mut stmt = match self.db.prepare(
+            "SELECT
             DocumentId,
             PublicationId,
             MepsDocumentId,
@@ -234,7 +254,8 @@ impl Publication {
             PreferredPresentation,
             ContentReworkedDate,
             HasPronunciationGuide
-        FROM Document") {
+        FROM Document",
+        ) {
             Ok(stmt) => stmt,
             Err(_err) => {
                 fallback = true;
@@ -242,7 +263,8 @@ impl Publication {
                     target: TARGET,
                     "Falling back to deprecated Document table."
                 );
-                self.db.prepare("SELECT
+                self.db.prepare(
+                    "SELECT
                     DocumentId,
                     PublicationId,
                     MepsDocumentId,
@@ -267,7 +289,8 @@ impl Publication {
                     FirstPageNumber,
                     LastPageNumber,
                     ContentLength
-                FROM Document")?
+                FROM Document",
+                )?
             }
         };
         let mut rows = stmt.query([])?;
@@ -390,33 +413,42 @@ impl Publication {
                 has_pronunciation_guide: match fallback {
                     false => row.get(33)?,
                     true => false,
-                }
+                },
             };
 
             documents.push(document);
         }
-        
+
         Ok(documents)
     }
 
-    pub fn get_document_content_by_id(&mut self, id: i32) -> Result<Option<Vec<u8>>, Box<dyn std::error::Error>> {
-        let mut stmt = self.db.prepare("SELECT
+    pub fn get_document_content_by_id(
+        &mut self,
+        id: i32,
+    ) -> Result<Option<Vec<u8>>, Box<dyn std::error::Error>> {
+        let mut stmt = self.db.prepare(
+            "SELECT
             Content
-        FROM Document WHERE DocumentId = ?1")?;
-        
+        FROM Document WHERE DocumentId = ?1",
+        )?;
+
         let mut rows = stmt.query([id])?;
 
         let mut content = None;
         if let Some(row) = rows.next()? {
             content = row.get(0)?
         }
-        
+
         Ok(content)
     }
 
-    pub fn get_document_by_id(&mut self, id: i32) -> Result<Option<Document>, Box<dyn std::error::Error>> {
+    pub fn get_document_by_id(
+        &mut self,
+        id: i32,
+    ) -> Result<Option<Document>, Box<dyn std::error::Error>> {
         let mut fallback = false;
-        let mut stmt = match self.db.prepare("SELECT
+        let mut stmt = match self.db.prepare(
+            "SELECT
             DocumentId,
             PublicationId,
             MepsDocumentId,
@@ -450,7 +482,8 @@ impl Publication {
             PreferredPresentation,
             ContentReworkedDate,
             HasPronunciationGuide
-        FROM Document WHERE DocumentId = ?1") {
+        FROM Document WHERE DocumentId = ?1",
+        ) {
             Ok(stmt) => stmt,
             Err(_err) => {
                 fallback = true;
@@ -458,7 +491,8 @@ impl Publication {
                     target: TARGET,
                     "Falling back to deprecated Document table."
                 );
-                self.db.prepare("SELECT
+                self.db.prepare(
+                    "SELECT
                     DocumentId,
                     PublicationId,
                     MepsDocumentId,
@@ -482,7 +516,8 @@ impl Publication {
                     FirstPageNumber,
                     LastPageNumber,
                     ContentLength
-                FROM Document WHERE DocumentId = ?1")?
+                FROM Document WHERE DocumentId = ?1",
+                )?
             }
         };
         let mut rows = stmt.query([id])?;
@@ -602,7 +637,7 @@ impl Publication {
                 has_pronunciation_guide: match fallback {
                     false => row.get(32)?,
                     true => false,
-                }
+                },
             });
         }
         Ok(document)
@@ -610,7 +645,8 @@ impl Publication {
 
     pub fn get_dated_texts(&mut self) -> Result<Vec<DatedText>, Box<dyn std::error::Error>> {
         let mut fallback = false;
-        let mut stmt = match self.db.prepare("SELECT
+        let mut stmt = match self.db.prepare(
+            "SELECT
             DatedTextId,
             DocumentId,
             Link,
@@ -625,7 +661,8 @@ impl Publication {
             Caption,
             CaptionRich,
             Content
-        FROM DatedText") {
+        FROM DatedText",
+        ) {
             Ok(stmt) => stmt,
             Err(_e) => {
                 fallback = true;
@@ -633,7 +670,8 @@ impl Publication {
                     target: TARGET,
                     "Falling back to deprecated DatedText table."
                 );
-                self.db.prepare("SELECT
+                self.db.prepare(
+                    "SELECT
                     DatedTextId,
                     DocumentId,
                     Link,
@@ -645,7 +683,8 @@ impl Publication {
                     LastBibleCitationId,
                     Caption,
                     Content
-                FROM DatedText")?
+                FROM DatedText",
+                )?
             }
         };
         let mut rows = stmt.query([])?;
@@ -664,23 +703,23 @@ impl Publication {
                 last_bible_citation_id: row.get(8)?,
                 begin_paragraph_ordinal: match fallback {
                     false => row.get(9)?,
-                    true => 0
+                    true => 0,
                 },
                 end_paragraph_ordinal: match fallback {
                     false => row.get(10)?,
-                    true => 0
+                    true => 0,
                 },
                 caption: match fallback {
                     false => row.get(11)?,
-                    true => row.get(9)?
+                    true => row.get(9)?,
                 },
                 caption_rich: match fallback {
                     false => row.get(12)?,
-                    true => None
+                    true => None,
                 },
                 content: match fallback {
                     false => row.get(13)?,
-                    true => row.get(10)?
+                    true => row.get(10)?,
                 },
             };
 
@@ -694,22 +733,27 @@ impl Publication {
     // save a Document on frontend and backend, but anyway the `LruCache`
     // save some processing power, especially when we need to go to the
     // next or previous chapter multiple times.
-    pub fn get_content_text_from(&mut self, content_table: ContentTables, id: i32) -> Result<Option<String>, Box<dyn std::error::Error>>{
+    pub fn get_content_text_from(
+        &mut self,
+        content_table: ContentTables,
+        id: i32,
+    ) -> Result<Option<String>, Box<dyn std::error::Error>> {
         if let Some(content) = self.decrypted_content_cache.get(&(content_table, id)) {
-            return Ok(Some(content.clone()))
+            return Ok(Some(content.clone()));
         }
 
         match content_table {
             ContentTables::Document => {
                 if let Some(content) = self.get_document_content_by_id(id)? {
                     let content = self.decrypt_content(content)?;
-                    self.decrypted_content_cache.put((ContentTables::Document, id), content.clone());
+                    self.decrypted_content_cache
+                        .put((ContentTables::Document, id), content.clone());
                     Ok(Some(content))
                 } else {
                     Ok(None)
                 }
             }
-            _ => Err("Unsupported content table or not implemented yet".into())
+            _ => Err("Unsupported content table or not implemented yet".into()),
         }
     }
 

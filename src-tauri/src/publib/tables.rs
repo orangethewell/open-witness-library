@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub struct DatedText {
     // Primary key
@@ -26,7 +26,7 @@ pub struct DatedText {
     pub caption: String,
     pub caption_rich: Option<String>,
 
-    pub content: Vec<u8>
+    pub content: Vec<u8>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default)]

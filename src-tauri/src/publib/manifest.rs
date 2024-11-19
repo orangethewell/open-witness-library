@@ -22,13 +22,13 @@ pub struct PublicationManifest {
     pub file_name: String,
     #[serde(rename = "type")]
     pub type_id: i32,
-    
+
     pub title: String,
     pub short_title: String,
     pub display_title: String,
     pub reference_title: String,
     pub undated_reference_title: String,
-    
+
     pub title_rich: Option<String>,
     pub display_title_rich: Option<String>,
     pub reference_title_rich: Option<String>,

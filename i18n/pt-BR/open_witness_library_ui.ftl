@@ -1,1 +1,0 @@
-update-list = Atualizar lista

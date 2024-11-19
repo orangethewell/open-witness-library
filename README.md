@@ -3,27 +3,11 @@
 
 <p align=center><b>Open Witness Library</b> is a program to read articles that carries <i>God's true name</i>.</p>
 
-## Warning
-This branch is outdated, please refer to the most [recent branch](https://github.com/orangethewell/open-witness-library/tree/feature/ui-development).
----
 This program is a alternative for **JW Library** app[^1] for OSes that doesn't support the app or had lost support through the years. You can read `.jwpub` files and study Bible.
 
 ## Features
 
-This program still is a work-in-progress, so it isn't full compatible with all publications and publication's features. You can track the features present on the program there:
-
-- [ ] Publications:
-    - [x] Read the publications;
-    - [ ] Aswner the publication questions on textboxes;
-    - [ ] Highlight publication text;
-    - [ ] Make notes;
-    - [ ] Watch publication's videos;
-- [ ] Bible:
-    - [ ] Read Bible; `You can read partially Bible's content`
-    - [ ] Bookmark Bible versicles and chapters;
-    - [ ] Read from Publications;
-    - [ ] Compare multiple Bible editions;
-
+This program still is a work-in-progress, so it isn't full compatible with all publications and publication's features. You can track the features present on the program [here](https://github.com/orangethewell/open-witness-library/issues/5)
 
 ## Installation
 
@@ -72,7 +56,7 @@ After installing it, you can run the application with the following command:
 cargo tauri dev
 ```
 
-### Running on mobile
+### Running on mobile (NOTE: Not Supported for now)
 *Open Witness Library* also runs on **Android** and **iOS**, but it isn't fully supported. If you want to test it out on Android, you need to add the Android targets to your rustup installation by running the following command:
 ```sh
 rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android

@@ -2,6 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    #[cfg(desktop)]
-    open_witness_library_lib::run();
+    open_witness_library_lib::run()
 }

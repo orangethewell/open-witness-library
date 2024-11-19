@@ -1,0 +1,9 @@
+https://app.jw-cdn.org/tokens/jwl-public.jwt - token for something
+https://app.jw-cdn.org/apis/alerts/list?type=news&lang={lang_code} - use the token and give any society alert
+
+https://app.jw-cdn.org/config/catalog-addendum.json - some test api?
+https://app.jw-cdn.org/catalogs/publications/v4/manifest.json - get latest manifest for catalog
+https://app.jw-cdn.org/catalogs/publications/v4/{manifest_uuid4}/catalog.info.json.gz - get catalog 
+https://app.jw-cdn.org/catalogs/publications/v4/9392bbe5-3e65-4da2-bf58-da28d8a37131/signed-delta.info.json.gz - some kind of verification
+https://app.jw-cdn.org/catalogs/media/languages.json.gz - A big json with all code for languages and media catalogues
+https://app.jw-cdn.org/catalogs/media/T.json.gz - Media catalog (T = Portuguese Brazil)

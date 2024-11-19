@@ -1,0 +1,106 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  user-select: none;
+}
+
+.jwac {
+  max-width: 1020px;
+  margin: 0 auto;
+}
+
+/* Chrome, Edge and Safari */
+/* *::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+*::-webkit-scrollbar-track {
+  border-radius: 5px;
+  background-color: #E9F3F6;
+}
+
+*::-webkit-scrollbar-track:hover {
+  background-color: #F2FCFF;
+}
+
+*::-webkit-scrollbar-track:active {
+  background-color: #F2FCFF;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background-color: #C0C0C0;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #DEDEDE;
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background-color: #8D8D8D;
+} */
+
+.outlet-container {
+  margin-top: 48px;
+  height: calc(100vh - 48px);
+  margin-left: 0;
+  margin-right: 0;
+  min-width: 100vw;
+  overflow: auto;
+}
+
+.container {
+  margin: 32px
+}
+
+h1, h2, h3, h4, h5, h6, p {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.subtext {
+  font-size: 12px;
+  color: #8d8d8d;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.go-route-pub {
+  color: white;
+  font-weight: bold;
+  background-color: #0f0f0f3d;
+  padding: 22px 10px;
+  transition: padding-left 500ms, padding-right 500ms, background-color 0.5s;
+  z-index: 100;
+}
+
+.go-route-pub:hover{
+  color: white;
+  background-color: #0f0f0fa6;
+}
+
+.go-pub-back {
+  position: fixed;
+  left: 1px;
+  top: 50%;
+}
+.go-pub-back:hover {
+  padding-left: 24px;
+}
+
+.go-pub-next {
+  position: fixed;
+  right: 1px;
+  top: 50%
+}
+
+.go-pub-next:hover {
+  padding-right: 24px;
+}

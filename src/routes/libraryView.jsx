@@ -1,4 +1,4 @@
-import { List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { Fab, List, ListItemButton, ListItemIcon, ListItemText, useTheme } from '@mui/material';
 import { invoke } from '@tauri-apps/api/core';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,9 @@ import { useNavigate } from 'react-router-dom';
 import { IoMdPeople } from "react-icons/io";
 import { LuRectangleVertical } from "react-icons/lu";
 import { PiBooksLight } from "react-icons/pi";
+import { open } from '@tauri-apps/plugin-dialog';
+import { Add } from '@mui/icons-material';
+import PageLayoutSlider from '../components/transitions';
 
 
 const libraryPublicationTypes = [
@@ -81,6 +84,19 @@ const libraryPublicationTypes = [
 const LibraryView = () => {
     const { t } = useTranslation();
 
+    const addPublication = async () => {
+        const file = await open({
+            multiple: false,
+            filters: [{
+                name: "JWPUB file",
+                extensions: ["jwpub"],
+            }],
+            directory: false,
+        })
+        
+        await invoke("catalog_install_jwpub_file", {filePath: file})
+    }
+
     const [availableTypes, setAvailableTypes] = useState([]);
     const navigate = useNavigate();
 
@@ -113,7 +129,13 @@ const LibraryView = () => {
         fetchCounts();
     }, []);
 
+    const theme = useTheme();
+
+    console.log(theme.vars);
+
     return (
+        <>
+        <PageLayoutSlider>
         <List>
             {availableTypes.map((publicationType) => (
                     <ListItemButton sx={{
@@ -121,7 +143,7 @@ const LibraryView = () => {
                         paddingBottom: 6,
                         marginBottom: 1,
                         height: 64,
-                        backgroundColor: "#FFFFFF08"
+                        backgroundColor: theme.vars.palette.stackButton.main
                     }} key={publicationType.key} onClick={(ev) => {
                         navigate(`/library/${publicationType.key}`);
                     }}>
@@ -141,6 +163,11 @@ const LibraryView = () => {
                 )
             )}
         </List>
+        </PageLayoutSlider>
+        <Fab onClick={addPublication} style={{position: "fixed", bottom: 20, right: 20}} color="primary">
+            <Add/>
+        </Fab>
+    </>
     );
 };
 

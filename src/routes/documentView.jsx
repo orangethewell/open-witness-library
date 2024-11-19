@@ -1,34 +1,43 @@
-import { convertFileSrc, invoke } from '@tauri-apps/api/core';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Box, List, ListItemButton, ListItemText, Tab, Tabs } from "@mui/material";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-const ChapterView = () => {
-    const { lang, category, pubSymbol, chapterId } = useParams();
-    let chapterIdx = Number(chapterId);
-    const [content, setContent] = useState({ content: '', next_exists: false, previous_exists: false });
-    const navigate = useNavigate();
+const DocumentView = () => {
+    const { symbol, documentId } = useParams();
+    const Id = parseInt(documentId)
+
+    const [content, setContent] = useState("");
+    const [prevExists, setPrevExists] = useState(false);
+    const [nextExists, setNextExists] = useState(false);
+
     const contentRef = useRef(null);
+
+    const navigate = useNavigate();
 
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = '/pub-styling.css'
     document.head.appendChild(link);
-
     useEffect(() => {
         const fetchData = async () => {
-            setContent(await invoke("pubcatalog_get_chapter_content", {lang, category, pubSymbol, contentId: chapterIdx}));
+            await invoke("catalog_open_connection", {filenameSymbol: symbol});
+            setContent(await invoke("catalog_get_document_content", {documentId: Id}));
+            setPrevExists(await invoke("catalog_check_document_exists", {documentId: Id - 1}));
+            setNextExists(await invoke("catalog_check_document_exists", {documentId: Id + 1}));
+
         };
         fetchData();
-    }, [lang, category, pubSymbol, chapterId]);
+    }, [symbol, documentId]);
 
-    const prevChapter = content.previous_exists ? (
-        <button className='go-route-pub go-pub-back' onClick={() => navigate(`/pubview/${lang}/${category}/${pubSymbol}/${chapterIdx - 1}`)}>
+    const prevDocument = prevExists ? (
+        <button className='go-route-pub go-pub-back' onClick={() => navigate(`/publication/${symbol}/${Id - 1}`)}>
             {"<"}
         </button>
     ) : null;
 
-    const nextChapter = content.next_exists ? (
-        <button className='go-route-pub go-pub-next' onClick={() => navigate(`/pubview/${lang}/${category}/${pubSymbol}/${chapterIdx + 1}`)}>
+    const nextDocument = nextExists ? (
+        <button className='go-route-pub go-pub-next' onClick={() => navigate(`/publication/${symbol}/${Id + 1}`)}>
             {">"}
         </button>
     ) : null;
@@ -76,8 +85,8 @@ const ChapterView = () => {
         }
 
         const updateContent = async () => {
-            if (content.content && contentRef.current) {
-                let updatedContent = await updateImageSources(content.content);
+            if (content && contentRef.current) {
+                let updatedContent = await updateImageSources(content);
                 updatedContent = await updateBackgroundImgSources(updatedContent);
                 contentRef.current.innerHTML = updatedContent;
             }
@@ -87,12 +96,12 @@ const ChapterView = () => {
     }, [content]);
 
     return (
-        <div>
-            {prevChapter}
+        <Box>
+            {prevDocument}
             <article id='article' className='jwac docClass-13 docId-1102023301 ms-ROMAN ml-T dir-ltr pub-lmd layout-reading layout-sidebar' ref={contentRef} />
-            {nextChapter}
-        </div>
+            {nextDocument}
+        </Box>
     );
 };
 
-export default ChapterView;
+export default DocumentView;

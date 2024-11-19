@@ -384,6 +384,21 @@ impl Publication {
         Ok(documents)
     }
 
+    pub fn get_document_content_by_id(&mut self, id: i32) -> Result<Option<Vec<u8>>, Box<dyn std::error::Error>> {
+        let mut stmt = self.db.prepare("SELECT
+            Content
+        FROM Document WHERE DocumentId = ?1")?;
+        
+        let mut rows = stmt.query([id])?;
+
+        let mut content = None;
+        if let Some(row) = rows.next()? {
+            content = row.get(0)?
+        }
+        
+        Ok(content)
+    }
+
     pub fn get_document_by_id(&mut self, id: i32) -> Result<Option<Document>, Box<dyn std::error::Error>> {
         let mut fallback = false;
         let mut stmt = match self.db.prepare("SELECT
@@ -671,14 +686,9 @@ impl Publication {
 
         match content_table {
             ContentTables::Document => {
-                if let Some(document) = self.get_document_by_id(id)? {
-                    let content = if let Some(content) = document.content { 
-                        let content = self.decrypt_content(content)?;
-                        self.decrypted_content_cache.put((ContentTables::Document, id), content.clone());
-                        content
-                    } else {
-                        return Ok(None)
-                    };
+                if let Some(content) = self.get_document_content_by_id(id)? {
+                    let content = self.decrypt_content(content)?;
+                    self.decrypted_content_cache.put((ContentTables::Document, id), content.clone());
                     Ok(Some(content))
                 } else {
                     Ok(None)

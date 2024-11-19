@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const DocumentItemButton = (props) => {
-    let {item, finder} = props;
+    let {item, finder, symbol} = props;
+    const navigate = useNavigate();
 
     return (<ListItemButton sx={{
         height: 80
-    }} key={item.id}>
+    }} key={item.id} onClick={(ev) => {
+        navigate(`/publication/${symbol}/${finder(item.id).document.id}`);
+    }}>
         <ListItemText primaryTypographyProps={{
             variant: "body2",
             color: "textSecondary"
@@ -42,7 +45,6 @@ const PublicationView = () => {
         publication_view_items_documents: [],
     });
     
-    const navigate = useNavigate();
     const [tabIndex, setTabIndex] = useState(0);
 
     const handleTabSwitch = (event, newValue) => {
@@ -130,7 +132,7 @@ const PublicationView = () => {
                                 {item.default_document_id!== -1? (
                                     <>
                                     { findDocumentByViewItemId(item.id).document.toc_title ? (
-                                        <DocumentItemButton item={item} finder={findDocumentByViewItemId}/>
+                                        <DocumentItemButton symbol={symbol} item={item} finder={findDocumentByViewItemId}/>
                                     ) : undefined}
                                     </>
                                 ): (
@@ -141,7 +143,7 @@ const PublicationView = () => {
                                     {subitem.default_document_id!== -1? (
                                         <>
                                         { findDocumentByViewItemId(subitem.id).document.toc_title ? (
-                                            <DocumentItemButton item={subitem} finder={findDocumentByViewItemId}/>
+                                            <DocumentItemButton symbol={symbol} item={subitem} finder={findDocumentByViewItemId}/>
                                         ) : undefined}
                                         </>
                                     ): (

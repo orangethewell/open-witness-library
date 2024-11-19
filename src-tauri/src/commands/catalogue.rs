@@ -59,6 +59,19 @@ pub struct PublicationViewResponse {
 }
 
 #[tauri::command]
+pub async fn catalog_open_connection(manager: tauri::State<'_, CatalogManager>, filename_symbol: String) -> Result<(), String> {
+    debug!(
+        target: TARGET, 
+        "{}: {} => open connection with {}", 
+        "COMMAND_REQUEST".bright_green(),
+        "Catalog".bright_magenta(),
+        filename_symbol.green()
+    );
+    let mut catalog = manager.catalog.lock().await;
+    catalog.open_publication_connection(filename_symbol).map_err(|err| err.to_string())
+}
+
+#[tauri::command]
 pub async fn catalog_get_publication_view_from(manager: tauri::State<'_, CatalogManager>, filename_symbol: String) -> Result<PublicationViewResponse, String> {
     debug!(
         target: TARGET, 
@@ -106,6 +119,26 @@ pub async fn catalog_get_document_by_id(manager: tauri::State<'_, CatalogManager
     let mut catalog = manager.catalog.lock().await;
     if let Some(publication) = catalog.get_current_publication() {
         return Ok(publication.get_document_by_id(document_id).map_err(|err| err.to_string())?)
+    }
+
+    Err("There aren't a publication open.".to_owned())
+}
+
+#[tauri::command]
+pub async fn catalog_check_document_exists(manager: tauri::State<'_, CatalogManager>, document_id: i32) -> Result<bool, String> {
+    debug!(
+        target: TARGET, 
+        "{}: {} => get document by ID {}", 
+        "COMMAND_REQUEST".bright_green(),
+        "Catalog -> Publication".bright_magenta(),
+        document_id.to_string().yellow()
+    );
+    let mut catalog = manager.catalog.lock().await;
+    if let Some(publication) = catalog.get_current_publication() {
+        return Ok(match publication.get_document_by_id(document_id).map_err(|err| err.to_string())? {
+            Some(_document) => true,
+            None => false,
+        })
     }
 
     Err("There aren't a publication open.".to_owned())

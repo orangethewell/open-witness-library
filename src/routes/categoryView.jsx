@@ -1,9 +1,11 @@
-import { Typography } from "@mui/material";
+import { Fab, Typography } from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Catalog from "../components/catalog";
 import { useTranslation } from "react-i18next";
+import { Add } from "@mui/icons-material";
+import PageLayoutSlider from "../components/transitions";
 
 const get_list_of_publications = async (type) => {
     let data = await invoke("catalog_get_list_from_type", {publicationType: type});
@@ -218,7 +220,20 @@ const ManualGuidelinesView = () => {
 const CategoryView = () => {
     const { category } = useParams();
 
-    switch (category) {
+    const addPublication = async () => {
+        const file = await open({
+            multiple: false,
+            filters: [{
+                name: "JWPUB file",
+                extensions: ["jwpub"],
+            }],
+            directory: false,
+        })
+        
+        await invoke("catalog_install_jwpub_file", {filePath: file})
+    }
+
+    const categoryView = () => {switch (category) {
         case "bible":
             return <BibleView />;
         case "kingdom_ministry":
@@ -245,7 +260,22 @@ const CategoryView = () => {
             return <ManualGuidelinesView />;
         default:
             return <Typography variant="h1">Category not found</Typography>;
-    }
+    }};
+
+    return (
+        <>
+        <PageLayoutSlider>
+            <div>
+            {categoryView()}
+            </div>
+        </PageLayoutSlider>
+        <Fab onClick={addPublication} style={{position: "fixed", bottom: 20, right: 20}} color="primary">
+            <Add/>
+        </Fab>
+        </>
+    )
+    
+    
 };
 
 export default CategoryView;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
-import { Avatar, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { Avatar, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, useTheme } from '@mui/material';
 
 const PublicationIcon = ({type, id, alt=""}) => {
     let [icon, SetIcon] = useState("");
@@ -31,11 +31,21 @@ const Catalog = ({ publications }) => {
         navigate(`/publication/${publication.jwpub.replace(".jwpub", "")}`);
     };
 
+    const theme = useTheme();
+
     return (
         <List>
             {publications.map((publication) => (
-                <ListItemButton key={publication.symbol} onClick={() => handleClick(publication)}>
-                    <ListItemIcon>
+                <ListItemButton sx={{
+                    paddingTop: 5.68,
+                    paddingBottom: 5.68,
+                    marginBottom: 1,
+                    height: 64,
+                    backgroundColor: theme.vars.palette.stackButton.main
+                }} key={publication.symbol} onClick={() => handleClick(publication)}>
+                    <ListItemIcon sx={{
+                        marginLeft: -1.99
+                    }}>
                         <PublicationIcon type="t" id={publication.id} alt={publication.title} />
                     </ListItemIcon>
                     <ListItemText

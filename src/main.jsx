@@ -17,6 +17,7 @@ import { CssBaseline } from "@mui/material";
 import './i18n'
 
 const theme = createTheme({
+  cssVariables: true,
   colorSchemes: {
     dark: {
       palette: {
@@ -26,6 +27,9 @@ const theme = createTheme({
         secondary: {
           main: '#D6AFFF',
         },
+        stackButton: {
+          main: "#FFFFFF08",
+        }
       },
     },
     light: {
@@ -36,6 +40,9 @@ const theme = createTheme({
         secondary: {
           main: "#9f2dc4",
         },
+        stackButton: {
+          main: "#FFF",
+        }
       },
     }
   }

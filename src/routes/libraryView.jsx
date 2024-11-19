@@ -7,10 +7,20 @@ import { GiWhiteTower } from "react-icons/gi";
 import { BsExclamation } from "react-icons/bs";
 import { TfiAgenda } from "react-icons/tfi";
 import { CiBoxList } from "react-icons/ci";
-import { GrArticle } from "react-icons/gr";
+import { GrArticle, GrBook } from "react-icons/gr";
 import { GoChecklist } from "react-icons/go";
+import { useNavigate } from 'react-router-dom';
+import { IoMdPeople } from "react-icons/io";
+import { LuRectangleVertical } from "react-icons/lu";
+import { PiBooksLight } from "react-icons/pi";
+
 
 const libraryPublicationTypes = [
+    {
+        icon: <GrBook />,
+        key: "bible",
+        types: ["Bible"]
+    },
     {
         icon: <FiBook />,
         key: "book",
@@ -20,6 +30,16 @@ const libraryPublicationTypes = [
         icon: <FiBookOpen />,
         key: "brochure",
         types: ["Brochure", "Booklet"]
+    },
+    {
+        icon: <LuRectangleVertical />,
+        key: "tract",
+        types: ["Tract"]
+    },
+    {
+        icon: <GrArticle />,
+        key: "web",
+        types: ["Web"]
     },
     {
         icon: <GiWhiteTower />,
@@ -37,14 +57,19 @@ const libraryPublicationTypes = [
         types: ["Meeting Workbook"]
     },
     {
+        icon: <IoMdPeople />,
+        key: "kingdom_ministry",
+        types: ["Kingdom Ministry"]
+    },
+    {
         icon: <CiBoxList />,
         key: "program",
         types: ["Program"]
     },
     {
-        icon: <GrArticle />,
-        key: "web",
-        types: ["Web"]
+        icon: <PiBooksLight />,
+        key: "index",
+        types: ["Index"]
     },
     {
         icon: <GoChecklist />,
@@ -57,9 +82,7 @@ const LibraryView = () => {
     const { t } = useTranslation();
 
     const [availableTypes, setAvailableTypes] = useState([]);
-    const appendAvailableType = (pubType) => {
-        setAvailableTypes((prevTypes) => [...prevTypes, pubType]);
-    };
+    const navigate = useNavigate();
 
     const fetchCounts = async () => {
         const updatedTypes = await Promise.all(
@@ -99,7 +122,9 @@ const LibraryView = () => {
                         marginBottom: 1,
                         height: 64,
                         backgroundColor: "#FFFFFF08"
-                    }} key={publicationType.key} onClick={(ev) => {}}>
+                    }} key={publicationType.key} onClick={(ev) => {
+                        navigate(`/library/${publicationType.key}`);
+                    }}>
                         <ListItemIcon sx={{
                             fontSize: 36,
                             marginRight: 2,

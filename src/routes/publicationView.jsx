@@ -53,6 +53,7 @@ const PublicationView = () => {
 
     useEffect(() => {
         const fetchViewItems = async () => {
+            await invoke("catalog_open_connection", {filenameSymbol: symbol});
             const viewItem = await invoke("catalog_get_publication_view_from", {filenameSymbol: symbol});
             const documents = await fetchDocuments(viewItem.publication_view_items_documents);
             setViewItems({
@@ -61,7 +62,7 @@ const PublicationView = () => {
             });
         };
         fetchViewItems();
-    }, []);
+    }, [symbol]);
 
     const fetchDocuments = async (items) => {
         let documents = [];

@@ -47,7 +47,13 @@ export default {
                 default: 'Padrão do sistema',
                 light: 'Modo claro',
                 dark: 'Modo escuro'
-            }
+            },
+            help: "Ajuda",
+            help_message: "Se você teve algum problema ou tem " +
+            "alguma sugestão para melhorar o aplicativo, você pode " + 
+            "ajudar criando uma <0 href='https://github.com/orangethewell/open-witness-library/issues/new' target='_blank'>Issue</0> " +
+            "no <i>Github</i> explicando qual foi o seu problema ou " +
+            "dando detalhes sobre sua sugestão."
         }
     }
 }

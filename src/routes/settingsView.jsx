@@ -1,19 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Divider, FormControl, InputLabel, MenuItem, OutlinedInput, Select, } from '@mui/material';
+import { Box, Button, Divider, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Typography, } from '@mui/material';
 import { useColorScheme } from '@mui/material/styles';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { languageList, i18n } from '../i18n';
 import { invoke } from '@tauri-apps/api/core';
+import { getVersion } from '@tauri-apps/api/app';
 
 const SettingsView = () => {
     const { mode, setMode } = useColorScheme();
 
     const { t, i18n } = useTranslation();
     const [language, setLanguage] = useState(i18n.language);
+    const [version, setVersion] = useState("0.0.0");
 
     const handleChangeLanguage = (language) => {
         i18n.changeLanguage(language)
     }
+
+    useEffect(() => {
+        const fetchVersion = async () => {
+            setVersion(await getVersion())
+        }
+
+        fetchVersion();
+    })
 
     useEffect(() => {
         const notifyThemeChange = async () => {
@@ -79,6 +89,9 @@ const SettingsView = () => {
                 </Select>
             </FormControl>
             </p>
+            <h2>{t("settings.help")}</h2>
+            <p><Trans i18nKey={"settings.help_message"} components={[<a/>]} /></p>
+            <Typography variant='body2' color="textSecondary">{"Open Witness Library v" + version}</Typography>
         </Box>
     );
 };

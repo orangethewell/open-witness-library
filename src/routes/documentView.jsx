@@ -69,7 +69,7 @@ const DocumentView = () => {
                 
                 try {
                     // Converte o caminho usando `convertFileSrc`
-                    const newSrc = await convertFileSrc(imgPath, 'jwpub-media');
+                    const newSrc = convertFileSrc(imgPath, 'jwpub-media');
         
                     // Define o estilo `background-image` com a URL convertida
                     element.style.backgroundImage = `url('${newSrc}')`;

@@ -42,6 +42,7 @@ pub fn run() {
         .trace(Color::Cyan);
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(
@@ -62,6 +63,7 @@ pub fn run() {
                         message
                     ))
                 })
+                .level(log::LevelFilter::Debug)
                 .build(),
         )
         .invoke_handler(tauri::generate_handler![
@@ -77,9 +79,7 @@ pub fn run() {
             settings::settings_set_webview_theme,
         ])
         .setup(|app| {
-            let main_window = app.get_webview_window("main").unwrap();
-            main_window.set_title("Open Witness Library");
-            debug!(
+            info!(
                 target: "open-witness-library",
                 "app data path is {}",
                 app.path()
@@ -94,7 +94,7 @@ pub fn run() {
                 catalog: Mutex::new(
                     publib::Catalog::init(
                         app.path()
-                            .local_data_dir()
+                            .app_local_data_dir()
                             .unwrap()
                             .join("open-witness-library")
                             .join("publications"),

@@ -2,6 +2,11 @@
 <h1 align=center>Open Witness Library</h1>
 
 <p align=center><b>Open Witness Library</b> is a program to read publications that carries <i>God's true name</i>.</p>
+<p align=center>
+    <a href="https://github.com/orangethewell/open-witness-library/releases/latest"><img src="https://img.shields.io/github/v/tag/orangethewell/open-witness-library?include_prereleases&sort=semver&style=plastic&label=Latest%20version" alt="tag-version"/></a>
+    <img src="https://img.shields.io/github/downloads/orangethewell/open-witness-library/total?style=plastic&label=Downloads" alt="downloads-count"/>
+    <img src="https://img.shields.io/github/actions/workflow/status/orangethewell/open-witness-library/ci.yml" alt="build-status">
+</p>
 
 This program is a alternative for **JW Library** app[^1] for OSes that doesn't support the app or had lost support through the years. You can read `.jwpub` files and study Bible.
 

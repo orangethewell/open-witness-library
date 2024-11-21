@@ -53,3 +53,4 @@ lru = "0.12"
 tauri-plugin-log = { version = "2", features = ["colored"] }
 tokio = "1.41.1"
 tauri-plugin-fs = "2"
+tauri-plugin-os = "2"

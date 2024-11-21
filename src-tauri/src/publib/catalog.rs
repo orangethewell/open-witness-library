@@ -1,6 +1,6 @@
 use std::{
     fs,
-    io::{self, Cursor, Read},
+    io::{self, Cursor, Read, Seek},
     num::NonZero,
     path::PathBuf,
 };
@@ -741,6 +741,176 @@ impl Catalog {
         Ok(())
     }
 
+    pub fn install_jwpub_from_archive(
+        &mut self,
+        file: Vec<u8>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        info!(target: TARGET, "Installing from archive data...");
+        let reader = io::BufReader::new(Cursor::new(file));
+        let mut package = ZipArchive::new(reader)?;
+
+        debug!(target: TARGET, "Checking if file is a valid JWPUB...");
+        let manifest = get_metadata_from_archive(&mut package)?;
+        let pub_pathname = manifest.name.replace(".jwpub", "");
+
+        debug!(target: TARGET, "Checking if JWPUB doesn't match with any publication installed...");
+        let mut existing_id = None;
+        if let Some(publication_data) =
+            self.get_publication_collection_meta(&manifest.name.replace(".jwpub", ""))?
+        {
+            let new_timestamp =
+                NaiveDateTime::parse_from_str(&manifest.timestamp, "%Y-%m-%dT%H:%M:%SZ")?;
+            let cur_timestamp =
+                NaiveDateTime::parse_from_str(&publication_data.timestamp, "%Y-%m-%dT%H:%M:%SZ")?;
+
+            existing_id = Some(publication_data.id);
+
+            if cur_timestamp >= new_timestamp {
+                error!(target: TARGET, "Publication {} is newer or the same than the installed version.", manifest.name.replace(".jwpub", ""));
+                return Err(format!(
+                    "Publication {} is newer or the same than the installed version.",
+                    manifest.name.replace(".jwpub", "")
+                )
+                .into());
+            }
+        }
+
+        debug!(target: TARGET, "Configuring directory...");
+        let location = self.pub_path.join(&pub_pathname);
+        if !location.exists() {
+            fs_extra::dir::create_all(&location, false)?;
+        }
+        info!(target: TARGET, "Installing {} at {}...", pub_pathname.to_string().bright_magenta(), location.display().to_string().bright_magenta());
+        let mut content_file = package.by_name("contents")?;
+        let mut content_data = Vec::<u8>::new();
+        content_file.read_to_end(&mut content_data)?;
+        let content_package = ZipArchive::new(Cursor::new(content_data))?;
+
+        debug!(target: TARGET, "Extracting contents...");
+        unpack_zip(content_package, &location);
+
+        debug!(target: TARGET, "Copying manifest.json...");
+        let manifest_file = fs::File::create(location.join("manifest.json"))?;
+        serde_json::to_writer_pretty(manifest_file, &manifest)?;
+
+        info!(target: TARGET, "Indexing data to catalog...");
+        let mut tmp_publication =
+            Publication::from_database(location.join(&manifest.publication.file_name), -1)?;
+        let mut first_dated_text_offset = None;
+        let mut last_dated_text_offset = None;
+
+        let dated_texts = tmp_publication.get_dated_texts()?;
+        if dated_texts.len() > 0 {
+            first_dated_text_offset = Some(dated_texts[0].first_date_offset);
+            last_dated_text_offset = Some(dated_texts[dated_texts.len() - 1].last_date_offset);
+        }
+
+        let publication_id = if let Some(id) = existing_id {
+            self.update_metadata_for_publication(
+                id as i64,
+                &manifest,
+                first_dated_text_offset,
+                last_dated_text_offset,
+                location
+                    .join(&manifest.publication.file_name)
+                    .to_str()
+                    .unwrap()
+                    .to_owned(),
+                None,
+            )?;
+            id as i64
+        } else {
+            self.insert_metadata_for_publication(
+                &manifest,
+                first_dated_text_offset,
+                last_dated_text_offset,
+                location
+                    .join(&manifest.publication.file_name)
+                    .to_str()
+                    .unwrap()
+                    .to_owned(),
+                None,
+            )?
+        };
+
+        tmp_publication.catalog_id = publication_id;
+
+        if manifest.publication.attributes.len() > 0 {
+            for attribute in manifest.publication.attributes.iter() {
+                if existing_id.is_some() {
+                    self.delete_attribute_for_publication(tmp_publication.catalog_id, attribute)?;
+                }
+                self.insert_attribute_for_publication(tmp_publication.catalog_id, attribute)?;
+            }
+        }
+
+        if manifest.publication.issue_attributes.len() > 0 {
+            for issue_attribute in manifest.publication.issue_attributes.iter() {
+                if existing_id.is_some() {
+                    self.delete_issue_attribute_for_publication(
+                        tmp_publication.catalog_id,
+                        issue_attribute,
+                    )?;
+                }
+                self.insert_issue_attribute_for_publication(
+                    tmp_publication.catalog_id,
+                    issue_attribute,
+                )?;
+            }
+        }
+
+        if !manifest.publication.issue_properties.symbol.is_empty() {
+            if existing_id.is_some() {
+                self.delete_issue_property_for_publication(
+                    tmp_publication.catalog_id,
+                    &manifest.publication.issue_properties,
+                )?;
+            }
+            self.insert_issue_property_for_publication(
+                tmp_publication.catalog_id,
+                &manifest.publication.issue_properties,
+            )?;
+        }
+
+        if manifest.publication.images.len() > 0 {
+            for image in manifest.publication.images.iter() {
+                if existing_id.is_some() {
+                    self.delete_image_for_publication(
+                        tmp_publication.catalog_id,
+                        image,
+                        location.join(&image.file_name).to_str().unwrap().to_owned(),
+                    )?;
+                }
+                self.insert_image_for_publication(
+                    tmp_publication.catalog_id,
+                    image,
+                    location.join(&image.file_name).to_str().unwrap().to_owned(),
+                )?;
+            }
+        }
+
+        if dated_texts.len() > 0 {
+            if existing_id.is_some() {
+                self.remove_indexed_dated_texts(&mut tmp_publication)?;
+            }
+            self.index_dated_texts(&mut tmp_publication)?;
+        }
+
+        if existing_id.is_some() {
+            self.remove_indexed_documents(&mut tmp_publication)?;
+        }
+        self.index_documents(&mut tmp_publication)?;
+
+        info!(
+            target: TARGET,
+            "publication ID {} installed at {}!",
+            tmp_publication.catalog_id.to_string().bold(),
+            location.display().to_string().green()
+        );
+
+        Ok(())
+    }
+
     pub fn install_jwpub_file<T: Into<PathBuf>>(
         &mut self,
         file_path: T,
@@ -1165,8 +1335,8 @@ impl Catalog {
     }
 }
 
-pub fn get_metadata_from_archive(
-    pub_archive: &mut ZipArchive<io::BufReader<fs::File>>,
+pub fn get_metadata_from_archive<T: Seek + Read>(
+    pub_archive: &mut ZipArchive<io::BufReader<T>>,
 ) -> Result<Manifest, serde_json::Error> {
     let mut manifest_file = pub_archive.by_name("manifest.json").unwrap();
     let mut manifest_data = String::new();

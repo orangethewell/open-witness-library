@@ -42,6 +42,7 @@ pub fn run() {
         .trace(Color::Cyan);
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
@@ -67,6 +68,7 @@ pub fn run() {
                 .build(),
         )
         .invoke_handler(tauri::generate_handler![
+            catalogue::catalog_install_jwpub_from_archive,
             catalogue::catalog_install_jwpub_file,
             catalogue::catalog_get_list_from_type,
             catalogue::catalog_get_count_from_type,
@@ -83,9 +85,8 @@ pub fn run() {
                 target: "open-witness-library",
                 "app data path is {}",
                 app.path()
-                    .local_data_dir()
+                    .app_local_data_dir()
                     .unwrap()
-                    .join("open-witness-library")
                     .display()
                     .to_string()
                     .green()
@@ -96,7 +97,6 @@ pub fn run() {
                         app.path()
                             .app_local_data_dir()
                             .unwrap()
-                            .join("open-witness-library")
                             .join("publications"),
                     )
                     .expect("Couldn't initialize catalog"),

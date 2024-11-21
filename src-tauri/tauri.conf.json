@@ -5,7 +5,7 @@
   "identifier": "com.open-witness-library.app",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://0.0.0.0:1420",
+    "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },

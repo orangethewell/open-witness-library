@@ -11,6 +11,7 @@
     "dialog:default",
     "log:default",
     "fs:default",
-    "fs:default"
+    "fs:default",
+    "os:default"
   ]
 }

@@ -14,7 +14,24 @@ pub struct CatalogManager {
     pub catalog: Mutex<publib::Catalog>,
 }
 
-// remember to call `.manage(MyState::default())`
+#[tauri::command]
+pub async fn catalog_install_jwpub_from_archive(
+    manager: tauri::State<'_, CatalogManager>,
+    file: Vec<u8>,
+) -> Result<(), String> {
+    debug!(
+        target: TARGET,
+        "{}: {} => Install JWPUB file from archive",
+        "COMMAND_REQUEST".bright_green(),
+        "Catalog".bright_magenta(),
+    );
+    let mut catalog = manager.catalog.lock().await;
+    catalog
+        .install_jwpub_from_archive(file)
+        .map_err(|err| err.to_string())?;
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn catalog_install_jwpub_file(
     manager: tauri::State<'_, CatalogManager>,

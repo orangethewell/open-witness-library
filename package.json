@@ -19,6 +19,7 @@
     "@tauri-apps/plugin-dialog": "^2.0.1",
     "@tauri-apps/plugin-fs": "^2.0.2",
     "@tauri-apps/plugin-log": "^2.0.0",
+    "@tauri-apps/plugin-os": "^2.0.0",
     "@tauri-apps/plugin-shell": "^2",
     "i18next": "^23.16.5",
     "i18next-browser-languagedetector": "^8.0.0",

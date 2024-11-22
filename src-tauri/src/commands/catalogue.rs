@@ -164,6 +164,27 @@ pub async fn catalog_get_images_of_type(
 }
 
 #[tauri::command]
+pub async fn catalog_get_documents(
+    manager: tauri::State<'_, CatalogManager>,
+) -> Result<Vec<Document>, String> {
+    debug!(
+        target: TARGET,
+        "{}: {} => get documents",
+        "COMMAND_REQUEST".bright_green(),
+        "Catalog -> Publication".bright_magenta(),
+    );
+    let mut catalog = manager.catalog.lock().await;
+    if let Some(publication) = catalog.get_current_publication() {
+        return Ok(publication
+            .get_documents()
+            .map_err(|err| err.to_string())?
+        );
+    }
+
+    Err("There aren't a publication open.".to_owned())
+}
+
+#[tauri::command]
 pub async fn catalog_get_document_by_id(
     manager: tauri::State<'_, CatalogManager>,
     document_id: i32,

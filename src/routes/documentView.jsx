@@ -3,41 +3,44 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { GrNext, GrPrevious } from "react-icons/gr";
+import { Swiper, SwiperSlide, useSwiper } from "swiper/react";
+import "swiper/css"
+import { Navigation, Virtual } from "swiper/modules";
 
-const DocumentView = () => {
-    const { symbol, documentId } = useParams();
-    const Id = parseInt(documentId)
+const PrevDocumentButton = () => {
+    const swiper = useSwiper();
 
+    return (
+        <button className='go-route-pub go-pub-back' onClick={() => swiper.slidePrev()}>
+            <GrPrevious />
+        </button>
+    )
+}
+
+const NextDocumentButton = () => {
+    const swiper = useSwiper();
+
+    return (
+        <button className='go-route-pub go-pub-next' onClick={() => swiper.slideNext()}>
+            <GrNext />
+        </button>
+    )
+}
+
+const Document = (params) => {
+    const { documentId, currentId } = params;
     const [content, setContent] = useState("");
-    const [prevExists, setPrevExists] = useState(false);
-    const [nextExists, setNextExists] = useState(false);
-
     const contentRef = useRef(null);
+    const swiper = useSwiper();
 
-    const navigate = useNavigate();
+    swiper.slideTo(currentId);
 
     useEffect(() => {
         const fetchData = async () => {
-            await invoke("catalog_open_connection", {filenameSymbol: symbol});
-            setContent(await invoke("catalog_get_document_content", {documentId: Id}));
-            setPrevExists(await invoke("catalog_check_document_exists", {documentId: Id - 1}));
-            setNextExists(await invoke("catalog_check_document_exists", {documentId: Id + 1}));
-
+            setContent(await invoke("catalog_get_document_content", {documentId: documentId}));
         };
         fetchData();
-    }, [symbol, documentId]);
-
-    const prevDocument = prevExists ? (
-        <button className='go-route-pub go-pub-back' onClick={() => navigate(`/publication/${symbol}/${Id - 1}`)}>
-            <GrPrevious />
-        </button>
-    ) : null;
-
-    const nextDocument = nextExists ? (
-        <button className='go-route-pub go-pub-next' onClick={() => navigate(`/publication/${symbol}/${Id + 1}`)}>
-            <GrNext />
-        </button>
-    ) : null;
+    }, [documentId]);
 
     useEffect(() => {
         const updateImageSources = async (contentHtml) => {
@@ -93,13 +96,86 @@ const DocumentView = () => {
     }, [content]);
 
     return (
-        <Box>
-            {prevDocument}
-            <article style={{
+        <div
+            style={{
+                height: "calc(100vh - 48px)",
+                overflow: "auto",
+            }}
+        >
+        <article 
+            style={{
                 paddingTop: 8,
-                paddingBottom: 8,
-            }} id='article' className='jwac docClass-13 docId-1102023301 ms-ROMAN ml-T dir-ltr pub-lmd layout-reading layout-sidebar' ref={contentRef} />
-            {nextDocument}
+                paddingBottom: 12,
+            }} 
+            id='article' 
+            className='
+                jwac 
+                docClass-13 
+                docId-1102023301 
+                ms-ROMAN 
+                ml-T 
+                dir-ltr 
+                pub-lmd 
+                layout-reading 
+                layout-sidebar' 
+            ref={contentRef} 
+        />
+        </div>
+    )
+}
+
+const DocumentView = () => {
+    const { symbol, documentId } = useParams();
+    const [id, setId] = useState(0);
+    const [documents, setDocuments] = useState([]);
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            await invoke("catalog_open_connection", {filenameSymbol: symbol});
+            setDocuments(await invoke("catalog_get_documents"));
+        };
+        fetchData();
+        setId(parseInt(documentId));
+    }, [symbol]);
+
+    const handleSlideChange = (swiper) => {
+        const newIndex = swiper.activeIndex;
+        const newDocId = documents[newIndex]?.id;
+        setId(newDocId);
+
+        if (newDocId) {
+            navigate(`/publication/${symbol}/${newDocId}`); // Atualiza a rota
+        }
+    };
+
+    return (
+        <Box>
+            <Swiper
+                modules={[Virtual, Navigation]}
+                virtual
+                navigation={{
+                    nextEl: '.go-route-pub .go-pub-next',
+                    prevEl: 'go-route-pub go-pub-back',
+                }}
+                slides={documents}
+                slidesPerView={1}
+                initialSlide={id}
+                onSlideChange={handleSlideChange}
+            >
+            <PrevDocumentButton/>
+            {
+                documents.map((document, index) => {
+                    return (
+                        <SwiperSlide key={index} virtualIndex={document.id}>
+                            <Document documentId={document.id} currentId={id}/>
+                        </SwiperSlide>
+                    );
+                })
+            }
+            <NextDocumentButton/>
+            </Swiper>
         </Box>
     );
 };

@@ -48,12 +48,12 @@ body {
 } */
 
 .outlet-container {
-  margin-top: 48px;
+  margin-top: 32px;
   height: calc(100vh - 48px);
   margin-left: 0;
   margin-right: 0;
   min-width: 100vw;
-  overflow: auto;
+  padding: 0;
 }
 
 .container {

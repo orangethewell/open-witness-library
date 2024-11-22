@@ -3,9 +3,13 @@
 
 ## [0.2.0] - Unreleased
 
+## [0.1.2] - Unreleased
+
 ### Added
 
 - Android build support ([#3](https://github.com/orangethewell/open-witness-library/issues/3))
+- Swiping controls on document view
+- Publication styling dynamic download instead of bundled (Legal reasons)
 
 ### Deprecated
 

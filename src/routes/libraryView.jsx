@@ -1,4 +1,4 @@
-import { Fab, List, ListItemButton, ListItemIcon, ListItemText, useTheme } from '@mui/material';
+import { Box, Fab, List, ListItemButton, ListItemIcon, ListItemText, useTheme } from '@mui/material';
 import { invoke } from '@tauri-apps/api/core';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -134,9 +134,16 @@ const LibraryView = () => {
     console.log(theme.vars);
 
     return (
-        <>
+        <Box sx={{ 
+            width: '100%',
+            height: "calc(100vh - 48px)",
+            overflow: "auto",
+        }}>
         <PageLayoutSlider>
-        <List>
+        <List sx={{
+            marginLeft: 2,
+            marginRight: 2
+        }}>
             {availableTypes.map((publicationType) => (
                     <ListItemButton sx={{
                         paddingTop: 6,
@@ -167,7 +174,7 @@ const LibraryView = () => {
         <Fab onClick={addPublication} style={{position: "fixed", bottom: 20, right: 20}} color="primary">
             <Add/>
         </Fab>
-    </>
+    </Box>
     );
 };
 

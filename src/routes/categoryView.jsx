@@ -1,4 +1,4 @@
-import { Fab, Typography } from "@mui/material";
+import { Box, Fab, Typography } from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -221,7 +221,7 @@ const CategoryView = () => {
     const { category } = useParams();
 
     const addPublication = async () => {
-        const file = await open({
+        const file = open({
             multiple: false,
             filters: [{
                 name: "JWPUB file",
@@ -263,16 +263,23 @@ const CategoryView = () => {
     }};
 
     return (
-        <>
+        <Box sx={{ 
+            width: '100%',
+            height: "calc(100vh - 48px)",
+            overflow: "auto",
+        }}>
         <PageLayoutSlider>
-            <div>
+            <div style={{
+                marginLeft: 8,
+                marginRight: 8
+            }}>
             {categoryView()}
             </div>
         </PageLayoutSlider>
         <Fab onClick={addPublication} style={{position: "fixed", bottom: 20, right: 20}} color="primary">
             <Add/>
         </Fab>
-        </>
+        </Box>
     )
     
     

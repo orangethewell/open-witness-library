@@ -110,49 +110,55 @@ const PublicationView = () => {
     }
 
     return (
-        <Box sx={{ width: '100%' }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                {viewItems.publication_view_items.length > 1 ? (
-                    <Tabs value={tabIndex} onChange={handleTabSwitch} aria-label="Publication Sections">
-                        {viewItems.publication_view_items.map((item, index) => (
-                            <Tab label={item.title} key={index} />
-                        ))}
-                    </Tabs>
-                ) : undefined}
-            </Box>
-            <Box>
-                {viewItems.publication_view_items.map((section, index) => (
-                    <SectionViewPanel key={index} value={tabIndex} index={index}>
-                        <List>
-                        {section.children.map((item) => (
-                            <>
-                                {item.default_document_id!== -1? (
-                                    <>
-                                    { findDocumentByViewItemId(item.id).document.toc_title ? (
-                                        <DocumentItemButton symbol={symbol} item={item} finder={findDocumentByViewItemId}/>
-                                    ) : undefined}
-                                    </>
-                                ): (
-                                    <Box key={item.id} sx={{ fontWeight: 500, fontSize: 18, paddingTop: 4 }}>{item.title}</Box>
-                                )}
-                                {item.children.map((subitem) => (
-                                    <>
-                                    {subitem.default_document_id!== -1? (
+        <Box sx={{ 
+            width: '100%',
+            height: "calc(100vh - 48px)",
+            overflow: "auto",
+        }}>
+            <Box sx={{margin: "auto", width: "95%"}}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    {viewItems.publication_view_items.length > 1 ? (
+                        <Tabs value={tabIndex} onChange={handleTabSwitch} aria-label="Publication Sections">
+                            {viewItems.publication_view_items.map((item, index) => (
+                                <Tab label={item.title} key={index} />
+                            ))}
+                        </Tabs>
+                    ) : undefined}
+                </Box>
+                <Box>
+                    {viewItems.publication_view_items.map((section, index) => (
+                        <SectionViewPanel key={index} value={tabIndex} index={index}>
+                            <List>
+                            {section.children.map((item) => (
+                                <>
+                                    {item.default_document_id!== -1? (
                                         <>
-                                        { findDocumentByViewItemId(subitem.id).document.toc_title ? (
-                                            <DocumentItemButton symbol={symbol} item={subitem} finder={findDocumentByViewItemId}/>
+                                        { findDocumentByViewItemId(item.id).document.toc_title ? (
+                                            <DocumentItemButton symbol={symbol} item={item} finder={findDocumentByViewItemId}/>
                                         ) : undefined}
                                         </>
                                     ): (
-                                        <Box key={subitem.id} sx={{ fontWeight: 500, fontSize: 16 }}>{subitem.title}</Box>
+                                        <Box key={item.id} sx={{ fontWeight: 500, fontSize: 18, paddingTop: 4 }}>{item.title}</Box>
                                     )}
-                                    </>
-                                ))}
-                            </>
-                        ))}
-                        </List>
-                    </SectionViewPanel>
-                ))}
+                                    {item.children.map((subitem) => (
+                                        <>
+                                        {subitem.default_document_id!== -1? (
+                                            <>
+                                            { findDocumentByViewItemId(subitem.id).document.toc_title ? (
+                                                <DocumentItemButton symbol={symbol} item={subitem} finder={findDocumentByViewItemId}/>
+                                            ) : undefined}
+                                            </>
+                                        ): (
+                                            <Box key={subitem.id} sx={{ fontWeight: 500, fontSize: 16 }}>{subitem.title}</Box>
+                                        )}
+                                        </>
+                                    ))}
+                                </>
+                            ))}
+                            </List>
+                        </SectionViewPanel>
+                    ))}
+                </Box>
             </Box>
         </Box>
     );

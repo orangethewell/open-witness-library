@@ -28,7 +28,7 @@ const theme = createTheme({
           main: '#D6AFFF',
         },
         stackButton: {
-          main: "#FFFFFF08",
+          main: "#FFFFFF22",
         }
       },
     },

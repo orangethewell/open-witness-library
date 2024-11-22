@@ -20,7 +20,7 @@
     "security": {
       "assetProtocol": {
         "enable": true,
-        "scope": ["$DATA/**", "$HOME/**"]
+        "scope": ["$APPLOCALDATA/**", "$HOME/**"]
       },
       "csp": null
     }

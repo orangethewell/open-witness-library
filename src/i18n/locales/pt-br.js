@@ -35,6 +35,14 @@ export default {
             }
         },
         settings: {
+            alerts: {
+                missing_assets: "Arquivos de estilo faltando, por favor, clique no botão para baixar.",
+                missing_assets_button1: "Baixar",
+                failed_download: "O download falhou.",
+                failed_download_button1: "Tentar novamente",
+                download_progress: "Baixando...",
+                download_finished: "Download concluído! Recarregando o programa em 5 segundos..."
+            },
             title: 'Configurações',
             display: 'Exibição',
             language: 'Idioma',

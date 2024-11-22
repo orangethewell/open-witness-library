@@ -5,10 +5,12 @@ pub mod utils;
 
 use commands::catalogue::CatalogManager;
 use handlers::catalog::jwpub_media_handler;
+use handlers::www::appdata_handler;
 use publib::extension::ChapterContent;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::path::PathBuf;
 use tauri::async_runtime::Mutex;
 use tauri::{http::Response, Manager, State};
 
@@ -75,10 +77,13 @@ pub fn run() {
             catalogue::catalog_open_connection,
             catalogue::catalog_get_publication_view_from,
             catalogue::catalog_check_document_exists,
+            catalogue::catalog_get_documents,
             catalogue::catalog_get_document_by_id,
             catalogue::catalog_get_document_content,
             catalogue::catalog_get_images_of_type,
             settings::settings_set_webview_theme,
+            settings::settings_base_assets_present,
+            settings::settings_download_base_assets,
         ])
         .setup(|app| {
             info!(
@@ -116,6 +121,27 @@ pub fn run() {
                     error!(
                         target: "jwpub-media::handler",
                         "Error handling jwpub-media request: {}",
+                        err.red()
+                    );
+                    Response::builder()
+                        .status(500)
+                        .body(err.into_bytes())
+                        .unwrap()
+                }
+            }
+        })
+        .register_uri_scheme_protocol("appdata", |ctx, req| {
+            let app = ctx.app_handle();
+            let file: String = req.uri().path().replacen("/", "", 1);
+            let mut filepath = app.path().app_local_data_dir().unwrap().join("www");
+            filepath.extend(file.split("/"));
+
+            match appdata_handler(&filepath).map_err(|err| err.to_string()) {
+                Ok(response) => response,
+                Err(err) => {
+                    error!(
+                        target: "appdata::handler",
+                        "Error handling appdata request: {}",
                         err.red()
                     );
                     Response::builder()

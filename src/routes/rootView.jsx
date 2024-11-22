@@ -1,14 +1,127 @@
 import React, { useEffect, useState } from 'react';
-import { Toolbar, Drawer, AppBar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, IconButton, Box, Container, Slide, useColorScheme } from '@mui/material';
+import { Toolbar, Drawer, AppBar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, IconButton, Box, Container, Slide, useColorScheme, Alert, Collapse, Button, LinearProgress } from '@mui/material';
 import { Outlet, redirect, useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import { CollectionsBookmarkTwoTone, HomeTwoTone, SettingsTwoTone } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, convertFileSrc } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { TransitionGroup } from 'react-transition-group';
 
 const Root = () => {
     const { mode, _setMode } = useColorScheme();
+    const { t } = useTranslation();
+    const [open, setOpen] = useState(false);
+    const [alerts, setAlerts] = useState([]);
+    const [progress, setProgress] = useState(0);
+    const navigate = useNavigate();
+
+    const toggleDrawer = (newOpen) => () => {
+        setOpen(newOpen);
+    };
+
     
+    useEffect(() => {
+        const downloadMissingAssets = async (_ev) => {
+            listen("download-progress", (event) => {
+                setProgress(event.payload);
+                if (event.payload == 100) {
+                    setAlerts([...alerts.filter((alert) => {
+                        return alert.msgId!== "downloadProgress"
+                    })])
+
+                    setAlerts([...alerts, {
+                        msgId: "downloadFinished",
+                        component: (
+                        <Alert 
+                            sx={{
+                                margin: "10px 0",
+                                bgcolor: 'background.paper'
+                            }} 
+                            variant='outlined' 
+                            severity='success'
+                        >
+                            <span>{t("settings.alerts.download_finished")}</span>
+                        </Alert>
+                        )
+                    }])
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000)
+                }
+            })
+
+            setAlerts([...alerts.filter((alert) => {
+                return alert.msgId!== "downloadFailed" && alert.msgId!== "assetsMissing"
+            })])
+
+            setAlerts([...alerts, {
+                msgId: "downloadProgress",
+                component: (
+                <Alert 
+                    sx={{
+                        margin: "10px 0",
+                        bgcolor: 'background.paper'
+                    }} 
+                    variant='outlined' 
+                    severity='info'
+                >
+                    <span>{t("settings.alerts.download_progress")}</span>
+                    <LinearProgress color="inherit" variant="determinate" value={progress} />
+                </Alert>
+                )
+            }])
+
+            await invoke("settings_download_base_assets")
+                .catch((_error) => {
+                    setAlerts([...alerts, {
+                        msgId: "downloadFailed",
+                        component: (
+                        <Alert 
+                            sx={{
+                                margin: "10px 0",
+                                bgcolor: 'background.paper'
+                            }} 
+                            variant='outlined' 
+                            severity='error'
+                            action={
+                                <Button onClick={downloadMissingAssets} color="inherit" size="small">{t("settings.alerts.failed_download_button1")}</Button>
+                            }
+                        >
+                            <span>{t("settings.alerts.failed_download")}</span>
+                        </Alert>
+                    )}])
+                })
+        }
+
+        invoke("settings_base_assets_present")
+            .catch((_error) => {
+                setAlerts([...alerts, {
+                    msgId: "assetsMissing",
+                    component: (
+                    <Alert 
+                        sx={{
+                            margin: "10px 0",
+                            bgcolor: 'background.paper'
+                        }} 
+                        variant='outlined' 
+                        severity='warning'
+                        action={
+                            <Button onClick={downloadMissingAssets} color="inherit" size="small">{t("settings.alerts.missing_assets_button1")}</Button>
+                        }
+                    >
+                        <span>{t("settings.alerts.missing_assets")}</span>
+                    </Alert>
+                )}])
+            });
+
+        let stLink = document.createElement("link")
+        stLink.rel = "stylesheet";
+        stLink.href = convertFileSrc("collector.css", "appdata");
+        document.head.appendChild(stLink);
+    }, [])
+
     useEffect(() => {
         const notifyThemeChange = async () => {
             await invoke("settings_set_webview_theme", {theme: mode});
@@ -16,16 +129,6 @@ const Root = () => {
 
         notifyThemeChange();
     }, [mode]);
-
-    const { t } = useTranslation();
-
-    const [open, setOpen] = useState(false);
-
-    const toggleDrawer = (newOpen) => () => {
-        setOpen(newOpen);
-    };
-
-    const navigate = useNavigate();
 
     return (
         <>
@@ -51,6 +154,13 @@ const Root = () => {
                 </Toolbar>
             </AppBar>
             <Container className='outlet-container'>
+                <List>
+                    <TransitionGroup>
+                        {alerts.map((alert) => {
+                            return <Collapse key={alert.msgId}>{alert.component}</Collapse>
+                        })}
+                    </TransitionGroup>
+                </List>
                 <Outlet/>
             </Container>
             <Drawer 

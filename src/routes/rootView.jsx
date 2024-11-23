@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Toolbar, Drawer, AppBar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, IconButton, Box, Container, Slide, useColorScheme, Alert, Collapse, Button, LinearProgress } from '@mui/material';
-import { Outlet, redirect, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import { CollectionsBookmarkTwoTone, HomeTwoTone, SettingsTwoTone } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';

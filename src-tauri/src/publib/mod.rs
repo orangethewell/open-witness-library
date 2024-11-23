@@ -1,7 +1,3 @@
-pub mod manager_old;
-
-pub mod extension;
-
 pub mod manifest;
 pub use manifest::Manifest;
 

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Divider, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Typography, } from '@mui/material';
+import { Box, Divider, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Typography } from '@mui/material';
 import { useColorScheme } from '@mui/material/styles';
 import { Trans, useTranslation } from 'react-i18next';
-import { languageList, i18n } from '../i18n';
+import { languageList } from '../i18n';
 import { invoke } from '@tauri-apps/api/core';
 import { getVersion } from '@tauri-apps/api/app';
 import { platform } from '@tauri-apps/plugin-os';

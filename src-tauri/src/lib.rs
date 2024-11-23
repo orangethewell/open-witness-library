@@ -6,16 +6,10 @@ pub mod utils;
 use commands::catalogue::CatalogManager;
 use handlers::catalog::jwpub_media_handler;
 use handlers::www::appdata_handler;
-use publib::extension::ChapterContent;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs;
-use std::path::PathBuf;
 use tauri::async_runtime::Mutex;
-use tauri::{http::Response, Manager, State};
+use tauri::{http::Response, Manager};
 
 use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
-#[macro_use]
 use commands::{catalogue, settings};
 
 #[macro_use]

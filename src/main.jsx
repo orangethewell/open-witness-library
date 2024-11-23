@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import {
-  createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
 import router from "./routes"
@@ -12,7 +11,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
 
-import { alpha, createTheme, StyledEngineProvider, ThemeProvider, } from '@mui/material/styles';
+import { createTheme, StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from "@mui/material";
 import './i18n'
 

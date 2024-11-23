@@ -1,7 +1,6 @@
 import { platform } from '@tauri-apps/plugin-os';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
-import { debug } from '@tauri-apps/plugin-log';
 import { invoke } from '@tauri-apps/api/core';
 
 export const addPublication = async () => {
@@ -15,7 +14,6 @@ export const addPublication = async () => {
     })
 
     if (platform() == "android") {
-        console.log(file);
         const contents = await readFile(file);
         await invoke("catalog_install_jwpub_from_archive", {file: contents})
 

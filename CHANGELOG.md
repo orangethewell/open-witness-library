@@ -11,10 +11,22 @@
 - Swiping controls on document view
 - Publication styling dynamic download instead of bundled (Legal reasons)
 
+### Fixed
+
+- Home view proportions for mobile view
+- Android activity bar color matching
+- Install publications on mobile
+
 ### Deprecated
 
 - Moved data directory from `$APPDATA_DIR/open-witness-library` to `$APPLOCALDATA_DIR/com.open-witness-library.app` for compliance with Android platform that doesn't support the past API
     - For more information, check the [Tauri Docs](https://docs.rs/tauri/2.1.1/tauri/path/struct.PathResolver.html#method.data_dir).
+
+### Removed
+
+- Old publication catalog manager
+- Old publication extension types and structs
+- Unused imports
 
 ## [0.1.1] - 2024-11-20
 

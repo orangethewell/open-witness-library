@@ -35,6 +35,14 @@ export default {
             }
         },
         settings: {
+            alerts: {
+                missing_assets: "Missing asset files, please, click download button.",
+                missing_assets_button1: "Download",
+                failed_download: "The download failed.",
+                failed_download_button1: "Try again",
+                download_progress: "Downloading...",
+                download_finished: "Download finished! Reloading app in 5 seconds..."
+            },
             title: 'Settings',
             display: 'Display',
             language: 'Language',

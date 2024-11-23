@@ -20,7 +20,7 @@
 ### Deprecated
 
 - Moved data directory from `$APPDATA_DIR/open-witness-library` to `$APPLOCALDATA_DIR/com.open-witness-library.app` for compliance with Android platform that doesn't support the past API
-    - For more information, check the [Tauri Docs](https://docs.rs/tauri/2.1.1/tauri/path/struct.PathResolver.html#method.data_dir).
+  - For more information, check the [Tauri Docs](https://docs.rs/tauri/2.1.1/tauri/path/struct.PathResolver.html#method.data_dir).
 
 ### Removed
 

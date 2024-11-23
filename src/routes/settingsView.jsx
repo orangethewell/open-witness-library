@@ -5,6 +5,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { languageList, i18n } from '../i18n';
 import { invoke } from '@tauri-apps/api/core';
 import { getVersion } from '@tauri-apps/api/app';
+import { platform } from '@tauri-apps/plugin-os';
 
 const SettingsView = () => {
     const { mode, setMode } = useColorScheme();
@@ -12,6 +13,7 @@ const SettingsView = () => {
     const { t, i18n } = useTranslation();
     const [language, setLanguage] = useState(i18n.language);
     const [version, setVersion] = useState("0.0.0");
+    const onMobile = platform() == "android" || platform() == "ios";
 
     const handleChangeLanguage = (language) => {
         i18n.changeLanguage(language)
@@ -40,6 +42,7 @@ const SettingsView = () => {
             <h1>{t("settings.title")}</h1>
             <Divider/>
             <h2>{t("settings.display")}</h2>
+            {!onMobile && (
             <FormControl sx={{ m: 1, width: 300 }}>
                 <InputLabel id="appearance-label">{t("settings.appearance")}</InputLabel>
                 <Select 
@@ -64,6 +67,7 @@ const SettingsView = () => {
                     <MenuItem value="dark">{t("settings.appearance_selectors.dark")}</MenuItem>
                 </Select>
             </FormControl>
+            )}
             <p>
             <FormControl sx={{ m: 1, width: 300 }}>
                 <InputLabel id="language-label">{t("settings.language")}</InputLabel>

@@ -6,6 +6,7 @@ import Catalog from "../components/catalog";
 import { useTranslation } from "react-i18next";
 import { Add } from "@mui/icons-material";
 import PageLayoutSlider from "../components/transitions";
+import { addPublication } from "../common";
 
 const get_list_of_publications = async (type) => {
     let data = await invoke("catalog_get_list_from_type", {publicationType: type});
@@ -219,19 +220,6 @@ const ManualGuidelinesView = () => {
 
 const CategoryView = () => {
     const { category } = useParams();
-
-    const addPublication = async () => {
-        const file = open({
-            multiple: false,
-            filters: [{
-                name: "JWPUB file",
-                extensions: ["jwpub"],
-            }],
-            directory: false,
-        })
-        
-        await invoke("catalog_install_jwpub_file", {filePath: file})
-    }
 
     const categoryView = () => {switch (category) {
         case "bible":

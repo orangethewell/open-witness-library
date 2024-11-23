@@ -13,10 +13,9 @@ import { useNavigate } from 'react-router-dom';
 import { IoMdPeople } from "react-icons/io";
 import { LuRectangleVertical } from "react-icons/lu";
 import { PiBooksLight } from "react-icons/pi";
-import { open } from '@tauri-apps/plugin-dialog';
 import { Add } from '@mui/icons-material';
 import PageLayoutSlider from '../components/transitions';
-
+import { addPublication } from "../common";
 
 const libraryPublicationTypes = [
     {
@@ -83,19 +82,6 @@ const libraryPublicationTypes = [
 
 const LibraryView = () => {
     const { t } = useTranslation();
-
-    const addPublication = async () => {
-        const file = await open({
-            multiple: false,
-            filters: [{
-                name: "JWPUB file",
-                extensions: ["jwpub"],
-            }],
-            directory: false,
-        })
-        
-        await invoke("catalog_install_jwpub_file", {filePath: file})
-    }
 
     const [availableTypes, setAvailableTypes] = useState([]);
     const navigate = useNavigate();

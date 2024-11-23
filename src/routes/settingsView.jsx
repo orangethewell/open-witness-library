@@ -34,7 +34,9 @@ const SettingsView = () => {
     }, [mode])
 
     return (
-        <Box>
+        <Box sx={{
+            margin: 2
+        }}>
             <h1>{t("settings.title")}</h1>
             <Divider/>
             <h2>{t("settings.display")}</h2>

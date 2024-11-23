@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { TransitionGroup } from 'react-transition-group';
+import { platform } from '@tauri-apps/plugin-os';
 
 const Root = () => {
     const { mode, _setMode } = useColorScheme();
@@ -15,6 +16,7 @@ const Root = () => {
     const [alerts, setAlerts] = useState([]);
     const [progress, setProgress] = useState(0);
     const navigate = useNavigate();
+    const onMobile = platform() == "android" || platform() == "ios";
 
     const toggleDrawer = (newOpen) => () => {
         setOpen(newOpen);
@@ -133,6 +135,7 @@ const Root = () => {
     return (
         <>
             <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                {onMobile && <Toolbar sx={{ minHeight: '36px !important', backgroundColor: "#00000033" }}/>}
                 <Toolbar sx={{ minHeight: '48px !important' }}>
                     <IconButton
                         color="inherit"
@@ -154,6 +157,7 @@ const Root = () => {
                 </Toolbar>
             </AppBar>
             <Container className='outlet-container'>
+                {onMobile && <Toolbar sx={{ minHeight: '36px !important' }}/>}
                 <List>
                     <TransitionGroup>
                         {alerts.map((alert) => {
@@ -172,6 +176,7 @@ const Root = () => {
                 open={open} 
                 onClose={toggleDrawer(false)}
             >
+                {onMobile && <Toolbar sx={{ minHeight: '36px !important' }}/>}
                 <Toolbar sx={{ minHeight: '48px !important' }}/>
                 <Box sx={{ width: 240 }} role="presentation" onClick={toggleDrawer(false)}>
                     <List>

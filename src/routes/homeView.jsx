@@ -1,33 +1,21 @@
 import React, { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { Button, Box, Typography } from '@mui/material';
+import { Button, Box, Typography, useTheme } from '@mui/material';
 import { Fab } from '@mui/material';
 import { Add, OpenInNew } from '@mui/icons-material';
-import { open } from '@tauri-apps/plugin-dialog';
 import PageLayoutSlider from '../components/transitions';
 import { useTranslation, Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { addPublication } from "../common";
 
 const Home = () => {
+    const theme = useTheme();
     const { t } = useTranslation();
     const navigate = useNavigate();
     
     const handleClick = (_ev) => {
         navigate("/library");
     };
-
-    const addPublication = async () => {
-        const file = await open({
-            multiple: false,
-            filters: [{
-                name: "JWPUB file",
-                extensions: ["jwpub"],
-            }],
-            directory: false,
-        })
-        
-        await invoke("catalog_install_jwpub_file", {filePath: file})
-    }
 
     return (
         <>
@@ -37,8 +25,12 @@ const Home = () => {
                         textAlign: "center",
                         paddingTop: 4,
                         paddingBottom: 4,
-                        paddingLeft: 16,
-                        paddingRight: 16,
+                        [theme.breakpoints.up('md')]: {
+                            paddingLeft: 16,
+                            paddingRight: 16,
+                        },
+                        paddingLeft: 4,
+                        paddingRight: 4,
                     }}
                 >
                     <Typography variant="h4">

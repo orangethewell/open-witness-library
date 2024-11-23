@@ -7,11 +7,11 @@ pub fn is_base_assets_present<'a>(data_path: &'a PathBuf) -> Result<(), Vec<Stri
         data_path.join("collector.css"),
         data_path.join(PathBuf::from_iter([
             "fonts",
-            "jw-icons-external-1970474.ttf"
+            "jw-icons-external-1970474.ttf",
         ])),
         data_path.join(PathBuf::from_iter([
             "fonts",
-            "jw-icons-external-1970474.woff"
+            "jw-icons-external-1970474.woff",
         ])),
     ];
 

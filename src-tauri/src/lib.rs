@@ -9,8 +9,8 @@ use handlers::www::appdata_handler;
 use tauri::async_runtime::Mutex;
 use tauri::{http::Response, Manager};
 
-use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
 use commands::{catalogue, settings};
+use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
 
 #[macro_use]
 extern crate log;

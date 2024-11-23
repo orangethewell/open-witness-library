@@ -175,10 +175,7 @@ pub async fn catalog_get_documents(
     );
     let mut catalog = manager.catalog.lock().await;
     if let Some(publication) = catalog.get_current_publication() {
-        return Ok(publication
-            .get_documents()
-            .map_err(|err| err.to_string())?
-        );
+        return Ok(publication.get_documents().map_err(|err| err.to_string())?);
     }
 
     Err("There aren't a publication open.".to_owned())

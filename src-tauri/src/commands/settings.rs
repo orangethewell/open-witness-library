@@ -1,7 +1,7 @@
 use std::{fs, io::Write, path::PathBuf};
 
-use reqwest::Client;
 use futures_util::StreamExt;
+use reqwest::Client;
 use tauri::{Emitter, Manager};
 
 use crate::handlers::www::is_base_assets_present;
@@ -10,11 +10,14 @@ use crate::handlers::www::is_base_assets_present;
 pub async fn settings_download_base_assets(app: tauri::AppHandle) -> Result<(), String> {
     let font1_response = reqwest::get("https://assetsnffrgf-a.akamaihd.net/assets/ct/1add6d1d93/fonts/jw-icons-external-1970474.woff").await.map_err(|e| e.to_string())?;
     let font2_response = reqwest::get("https://assetsnffrgf-a.akamaihd.net/assets/ct/1add6d1d93/fonts/jw-icons-external-1970474.ttf").await.map_err(|e| e.to_string())?;
-    let collector_response = reqwest::get("https://assetsnffrgf-a.akamaihd.net/assets/ct/1add6d1d93/collector.css").await.map_err(|e| e.to_string())?;
+    let collector_response =
+        reqwest::get("https://assetsnffrgf-a.akamaihd.net/assets/ct/1add6d1d93/collector.css")
+            .await
+            .map_err(|e| e.to_string())?;
 
-    let total_size = font1_response.content_length().unwrap_or(0) + 
-        font2_response.content_length().unwrap_or(0) + 
-        collector_response.content_length().unwrap_or(1);
+    let total_size = font1_response.content_length().unwrap_or(0)
+        + font2_response.content_length().unwrap_or(0)
+        + collector_response.content_length().unwrap_or(1);
 
     let mut downloaded: u64 = 0;
 
@@ -25,9 +28,12 @@ pub async fn settings_download_base_assets(app: tauri::AppHandle) -> Result<(), 
         fs::create_dir_all(&fonts_filepath).expect("Failed to create fonts directory");
     }
 
-    let mut font1_file = fs::File::create(fonts_filepath.join("jw-icons-external-1970474.woff")).expect("Failed to create font1 file");
-    let mut font2_file = fs::File::create(fonts_filepath.join("jw-icons-external-1970474.ttf")).expect("Failed to create font2 file");
-    let mut collector_file = fs::File::create(data_filepath.join("collector.css")).expect("Failed to create collector file");
+    let mut font1_file = fs::File::create(fonts_filepath.join("jw-icons-external-1970474.woff"))
+        .expect("Failed to create font1 file");
+    let mut font2_file = fs::File::create(fonts_filepath.join("jw-icons-external-1970474.ttf"))
+        .expect("Failed to create font2 file");
+    let mut collector_file = fs::File::create(data_filepath.join("collector.css"))
+        .expect("Failed to create collector file");
 
     let mut stream = font1_response.bytes_stream();
 
@@ -39,7 +45,8 @@ pub async fn settings_download_base_assets(app: tauri::AppHandle) -> Result<(), 
         app.emit(
             "download-progress",
             downloaded as f64 / total_size as f64 * 100.0,
-        ).map_err(|e| e.to_string())?;
+        )
+        .map_err(|e| e.to_string())?;
     }
 
     let mut stream = font2_response.bytes_stream();
@@ -52,20 +59,24 @@ pub async fn settings_download_base_assets(app: tauri::AppHandle) -> Result<(), 
         app.emit(
             "download-progress",
             downloaded as f64 / total_size as f64 * 100.0,
-        ).map_err(|e| e.to_string())?;
+        )
+        .map_err(|e| e.to_string())?;
     }
 
     let mut stream = collector_response.bytes_stream();
 
     while let Some(chunk) = stream.next().await {
         let chunk = chunk.map_err(|e| e.to_string())?;
-        collector_file.write_all(&chunk).map_err(|e| e.to_string())?;
+        collector_file
+            .write_all(&chunk)
+            .map_err(|e| e.to_string())?;
         downloaded += chunk.len() as u64;
 
         app.emit(
             "download-progress",
             downloaded as f64 / total_size as f64 * 100.0,
-        ).map_err(|e| e.to_string())?;
+        )
+        .map_err(|e| e.to_string())?;
     }
 
     downloaded = total_size;
@@ -73,7 +84,8 @@ pub async fn settings_download_base_assets(app: tauri::AppHandle) -> Result<(), 
     app.emit(
         "download-progress",
         downloaded as f64 / total_size as f64 * 100.0,
-    ).map_err(|e| e.to_string())?;
+    )
+    .map_err(|e| e.to_string())?;
 
     Ok(())
 }

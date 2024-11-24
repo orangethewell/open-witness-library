@@ -11,6 +11,10 @@ body {
   user-select: none;
 }
 
+#article {
+  user-select: text;
+}
+
 .jwac {
   max-width: 1020px;
   margin: 0 auto;

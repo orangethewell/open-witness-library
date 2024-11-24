@@ -163,6 +163,7 @@ const DocumentView = () => {
                 slidesPerView={1}
                 initialSlide={id}
                 onSlideChange={handleSlideChange}
+                simulateTouch={false}
             >
             <PrevDocumentButton/>
             {

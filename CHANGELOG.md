@@ -3,7 +3,7 @@
 
 ## [0.2.0] - Unreleased
 
-## [0.1.2] - Unreleased
+## [0.1.2] - 2024-11-23
 
 ### Added
 

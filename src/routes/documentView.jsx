@@ -6,12 +6,15 @@ import { GrNext, GrPrevious } from "react-icons/gr";
 import { Swiper, SwiperSlide, useSwiper } from "swiper/react";
 import "swiper/css"
 import { Navigation, Virtual } from "swiper/modules";
+import { platform } from "@tauri-apps/plugin-os";
 
 const PrevDocumentButton = () => {
     const swiper = useSwiper();
 
     return (
-        <button className='go-route-pub go-pub-back' onClick={() => swiper.slidePrev()}>
+        <button style={{
+            display: platform() === "android" || platform() === "ios" ? "none" : "block",
+        }} className='go-route-pub go-pub-back' onClick={() => swiper.slidePrev()}>
             <GrPrevious />
         </button>
     )
@@ -21,7 +24,9 @@ const NextDocumentButton = () => {
     const swiper = useSwiper();
 
     return (
-        <button className='go-route-pub go-pub-next' onClick={() => swiper.slideNext()}>
+        <button style={{
+            display: platform() === "android" || platform() === "ios" ? "none" : "block",
+        }} className='go-route-pub go-pub-next' onClick={() => swiper.slideNext()}>
             <GrNext />
         </button>
     )

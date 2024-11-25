@@ -3,6 +3,14 @@
 
 ## [0.2.0] - Unreleased
 
+### Added
+
+- Improved slide transitions
+
+### Fixed
+
+- Document navigation button goes invisible on mobile
+
 ## [0.1.2] - 2024-11-23
 
 ### Added

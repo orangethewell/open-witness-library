@@ -216,7 +216,7 @@ const useSelectionText = (ref) => {
                         safeRanges.push(range);
                         startRange = tokens[idx + 1].range.startOffset;
                         startRangeParent = tokens[idx + 1].parent;
-                    } else if (idx == endIdx && tokens[idx - 1].parent != startRangeParent) {
+                    } else if (idx == endIdx) {
                         let currentTextNode = tokens[idx].parent.childNodes[tokens[idx].childNodeIndex];
                         let endRange = tokens[idx].range.endOffset;
                         if (currentTextNode.data.endsWith(" ") || currentTextNode.data.endsWith("\u00A0")) {

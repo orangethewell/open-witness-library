@@ -80,6 +80,7 @@ const useSelectionText = (ref) => {
     
                 result.push(...tokenizeNode(node, startOffset, endOffset));
             } else if (node.nodeType === Node.ELEMENT_NODE) {
+                if (node.classList.contains('fn') || node.classList.contains('user-highlight')) return result;
                 node.childNodes.forEach(child => {
                     const childRange = range.cloneRange();
                     if (childRange.intersectsNode(child)) {
@@ -133,6 +134,7 @@ const useSelectionText = (ref) => {
     
         function processNode(node) {
             if (node.nodeType === Node.ELEMENT_NODE) {
+                if (node.classList.contains('fn') || node.classList.contains('user-highlight')) return;
                 node.childNodes.forEach(processNode);
             } else if (node.nodeType === Node.TEXT_NODE) {
                 tokenizeNode(node);
@@ -187,6 +189,7 @@ const useSelectionText = (ref) => {
                 range.setStart(parent.childNodes[startToken.childNodeIndex], startToken.range.startOffset);
                 range.setEnd(parent.childNodes[startToken.childNodeIndex], endToken.range.endOffset);
                 let span = document.createElement("span");
+                span.classList.add("user-highlight");
                 span.style.backgroundColor = "#ffff00a5";
                 range.surroundContents(span);
                 console.log("Deu certo")
@@ -197,9 +200,6 @@ const useSelectionText = (ref) => {
                 let safeRanges = [];
 
                 for (var idx = startIdx; idx <= endIdx; idx++) {
-                    if (tokens[idx].parent.matches("span.user-highlight")) {
-                        continue
-                    }
                     if (tokens[idx + 1] && tokens[idx + 1].parent != startRangeParent) {
                         let currentTextNode = tokens[idx].parent.childNodes[tokens[idx].childNodeIndex];
                         let endRange = tokens[idx].range.endOffset;

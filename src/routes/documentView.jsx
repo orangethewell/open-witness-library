@@ -195,18 +195,28 @@ const useSelectionText = (ref) => {
                 let startRangeParent = startToken.parent;
                 
                 for (var idx = startIdx; idx <= endIdx; idx++) {
-                    if (tokens[idx].parent != startRangeParent) {
-                        let textChildNode = tokens[idx - 1].parent.childNodes[tokens[idx - 1].childNodeIndex];
-                        let endRange = tokens[idx - 1].range.endOffset;
-                        console.log("marking: ", startRange, endRange, " at ", textChildNode);
+                    if (tokens[idx + 1] && tokens[idx + 1].parent != startRangeParent) {
+                        let currentTextNode = tokens[idx].parent.childNodes[tokens[idx].childNodeIndex];
+                        let endRange = tokens[idx].range.endOffset;
+                        if (currentTextNode.textContent.endsWith(" ")) {
+                            endRange += 1
+                        }
+                        console.log("marking: ", startRange, endRange, " at ", currentTextNode.data);
                         const range = document.createRange();
-                        range.setStart(textChildNode, startRange);
-                        range.setEnd(textChildNode, endRange);
+                        if (currentTextNode.length == 0) {
+                            continue;
+                        }
+                        range.setStart(currentTextNode, startRange);
+                        console.log(currentTextNode);
+                        range.setEnd(currentTextNode, endRange);
                         let span = document.createElement("span");
                         span.style.backgroundColor = "#ffff00a5";
                         range.surroundContents(span);
-                        startRange = tokens[idx].range.startOffset;
-                        startRangeParent = tokens[idx].parent;
+                        startRange = tokens[idx + 1].range.startOffset;
+                        startRangeParent = tokens[idx + 1].parent;
+                        console.log(startRangeParent.childNodes[tokens[idx + 1].childNodeIndex].data);
+                    } else {
+                        console.log(tokens[idx])
                     }
                 }
             }

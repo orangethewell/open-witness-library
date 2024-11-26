@@ -194,31 +194,48 @@ const useSelectionText = (ref) => {
                 let startRange = startToken.range.startOffset;
                 let startRangeParent = startToken.parent;
                 
+                let safeRanges = [];
+
                 for (var idx = startIdx; idx <= endIdx; idx++) {
+                    if (tokens[idx].parent.matches("span.user-highlight")) {
+                        continue
+                    }
                     if (tokens[idx + 1] && tokens[idx + 1].parent != startRangeParent) {
                         let currentTextNode = tokens[idx].parent.childNodes[tokens[idx].childNodeIndex];
                         let endRange = tokens[idx].range.endOffset;
-                        if (currentTextNode.textContent.endsWith(" ")) {
+                        console.log(currentTextNode.data)
+                        if (currentTextNode.data.endsWith(" ") || currentTextNode.data.endsWith("\u00A0")) {
                             endRange += 1
                         }
-                        console.log("marking: ", startRange, endRange, " at ", currentTextNode.data);
-                        const range = document.createRange();
-                        if (currentTextNode.length == 0) {
-                            continue;
+                        if (currentTextNode.data.startsWith(" ") || currentTextNode.data.startsWith("\u00A0")) {
+                            startRange -= 1
                         }
+                        const range = document.createRange();
                         range.setStart(currentTextNode, startRange);
-                        console.log(currentTextNode);
                         range.setEnd(currentTextNode, endRange);
-                        let span = document.createElement("span");
-                        span.style.backgroundColor = "#ffff00a5";
-                        range.surroundContents(span);
+                        safeRanges.push(range);
                         startRange = tokens[idx + 1].range.startOffset;
                         startRangeParent = tokens[idx + 1].parent;
-                        console.log(startRangeParent.childNodes[tokens[idx + 1].childNodeIndex].data);
-                    } else {
-                        console.log(tokens[idx])
+                    } else if (idx == endIdx && tokens[idx - 1].parent != startRangeParent) {
+                        let currentTextNode = tokens[idx].parent.childNodes[tokens[idx].childNodeIndex];
+                        let endRange = tokens[idx].range.endOffset;
+                        if (currentTextNode.data.endsWith(" ") || currentTextNode.data.endsWith("\u00A0")) {
+                            endRange += 1
+                        }
+                        const range = document.createRange();
+                        range.setStart(currentTextNode, startRange);
+                        range.setEnd(currentTextNode, endRange);
+                        safeRanges.push(range);
                     }
                 }
+
+                safeRanges.forEach((range, idx) => {
+                    let span = document.createElement("span");
+                    span.classList.add("user-highlight");
+                    span.style.backgroundColor = "#ffff00a5";
+                    range.surroundContents(span);
+                })
+                console.log("Fim")
             }
         }
 

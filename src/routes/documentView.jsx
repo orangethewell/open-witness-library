@@ -45,7 +45,7 @@ const useSelectionText = (ref) => {
             const start = rangeStart !== null ? rangeStart : 0;
             const end = rangeEnd !== null ? rangeEnd : text.length;
     
-            const tokens = text.slice(start, end).match(/[\w\u00C0-\u017F]+|[^\w\s]/g) || [];
+            const tokens = text.slice(start, end).match(/\d+:\d+|[\w\u00C0-\u017F]+|[^\w\s]/g) || [];
             let result = [];
             let offset = start;
     
@@ -108,7 +108,7 @@ const useSelectionText = (ref) => {
         function tokenizeNode(node) {
             const text = node.textContent;
             const parent = node.parentNode;
-            const matchedTokens = text.match(/[\w\u00C0-\u017F]+|[^\w\s]/g) || [];
+            const matchedTokens = text.match(/\d+:\d+|[\w\u00C0-\u017F]+|[^\w\s]/g) || [];
             let offset = 0;
     
             matchedTokens.forEach(token => {

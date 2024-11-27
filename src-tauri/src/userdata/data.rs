@@ -1,10 +1,12 @@
 use std::path::PathBuf;
 use colored::Colorize;
 use rusqlite::{params, Connection};
+use uuid::Uuid;
 
-use super::tables::Location;
+use super::tables::{BlockRange, Location, UserMark};
 
 const TARGET: &'static str = "userdata";
+const USERDATA_VERSION: i32 = 1;
 
 pub struct UserData {
     data_path: PathBuf,
@@ -213,7 +215,7 @@ impl UserData {
 
         debug!(target: TARGET,  "initializing \"{}\" table...", "PlaylistItemMarker".magenta());
         db.execute(
-            "CREATE TABLE IF NOT EXISTS PlaylistItemLocationMap (
+            "CREATE TABLE IF NOT EXISTS PlaylistItemMarker (
                 PlaylistItemMarkerId INTEGER PRIMARY KEY AUTOINCREMENT,
                 PlaylistItemId INTEGER NOT NULL,
 
@@ -263,7 +265,7 @@ impl UserData {
 
         debug!(target: TARGET,  "initializing \"{}\" table...", "TagMap".magenta());
         db.execute(
-            "CREATE TABLE IF NOT EXISTS Tag (
+            "CREATE TABLE IF NOT EXISTS TagMap (
                 TagMapId INTEGER PRIMARY KEY AUTOINCREMENT,
                 PlaylistItemId INTEGER,
                 LocationId INTEGER,
@@ -300,7 +302,7 @@ impl UserData {
                 MepsLanguage,
                 Type,
                 Title
-        FROM PublicationViewItemDocument",
+        FROM Location",
         )?;
         let mut rows = stmt.query([])?;
 
@@ -408,5 +410,171 @@ impl UserData {
         debug!(target: TARGET, "Location inserted to userdata database for ID {}!", location_id);
 
         Ok(location_id)
+    }
+
+    pub fn get_user_marks_by_location(
+        &self,
+        location_id: i32,
+    ) -> Result<Vec<UserMark>, Box<dyn std::error::Error>> {
+        let mut stmt = self.userdata_db.prepare(
+            "SELECT 
+                UserMarkId,
+                ColorIndex,
+                LocationId,
+                StyleIndex,
+                UserMarkGuid,
+                Version,
+        FROM UserMark WHERE LocationId=?1",
+        )?;
+        let mut rows = stmt.query([location_id])?;
+
+        let mut user_marks = vec![];
+
+        while let Some(row) = rows.next()? {
+            let user_mark = UserMark {
+                id: row.get(0)?,
+                color_index: row.get(1)?,
+                location_id: row.get(2)?,
+                style_index: row.get(3)?,
+                user_mark_guid: row.get(4)?,
+                version: row.get(5)?,
+            };
+
+            user_marks.push(user_mark);
+        }
+
+        Ok(user_marks)
+    }
+
+    pub fn get_user_mark_by_guid(
+        &self,
+        guid: String,
+    ) -> Result<Option<UserMark>, Box<dyn std::error::Error>> {
+        let mut stmt = self.userdata_db.prepare(
+            "SELECT 
+                UserMarkId,
+                ColorIndex,
+                LocationId,
+                StyleIndex,
+                UserMarkGuid,
+                Version,
+        FROM UserMark WHERE UserMarkGuid=?1",
+        )?;
+        let mut rows = stmt.query([guid])?;
+
+        if let Some(row) = rows.next()? {
+            let user_mark = UserMark {
+                id: row.get(0)?,
+                color_index: row.get(1)?,
+                location_id: row.get(2)?,
+                style_index: row.get(3)?,
+                user_mark_guid: row.get(4)?,
+                version: row.get(5)?,
+            };
+
+            return Ok(Some(user_mark))
+        }
+
+        Ok(None)
+    }
+
+    pub fn insert_user_mark(
+        &self,
+        color_index: i32,
+        location_id: i32,
+        style_index: i32,
+    ) -> Result<i64, Box<dyn std::error::Error>> {
+        let mut new_guid = Uuid::new_v4();
+
+        while let Ok(Some(_user_mark)) = self.get_user_mark_by_guid(new_guid.to_string()) {
+            new_guid = Uuid::new_v4();
+        }
+
+        self.userdata_db.execute(
+            "INSERT INTO UserMark (
+                ColorIndex,
+                LocationId,
+                StyleIndex,
+                UserMarkGuid,
+                Version,
+        ) VALUES (?1,?2,?3,?4,?5)",
+         params![
+            color_index,
+            location_id,
+            style_index,
+            new_guid.to_string(),
+            USERDATA_VERSION
+         ]
+        )?;
+
+        let user_mark_id = self.userdata_db.last_insert_rowid();
+
+        debug!(target: TARGET, "UserMark inserted to userdata database for ID {}!", user_mark_id);
+
+        Ok(user_mark_id)
+    }
+
+    pub fn get_block_range_by_user_mark_id(
+        &self,
+        user_mark_id: i64,
+    ) -> Result<Option<BlockRange>, Box<dyn std::error::Error>> {
+        let mut stmt = self.userdata_db.prepare(
+            "SELECT
+                BlockRangeId,
+                BlockType,
+                Identifier,
+                StartToken,
+                EndToken,
+                UserMarkId
+        FROM BlockRange WHERE UserMarkId=?1",
+        )?;
+        let mut rows = stmt.query([user_mark_id])?;
+
+        if let Some(row) = rows.next()? {
+            let block_range = BlockRange {
+                id: row.get(0)?,
+                block_type: row.get(1)?,
+                identifier: row.get(2)?,
+                start_token: row.get(3)?,
+                end_token: row.get(4)?,
+                user_mark_id: row.get(5)?,
+            };
+            
+            return Ok(Some(block_range))
+        }
+        
+        Ok(None)
+    }
+
+    pub fn insert_block_range(
+        &self,
+        block_type: i32,
+        identifier: String,
+        start_token: i32,
+        end_token: i32,
+        user_mark_id: i64,
+    ) -> Result<i64, Box<dyn std::error::Error>> {
+        self.userdata_db.execute(
+            "INSERT INTO BlockRange (
+                BlockType,
+                Identifier,
+                StartToken,
+                EndToken,
+                UserMarkId
+        ) VALUES (?1,?2,?3,?4,?5)",
+         params![
+            block_type,
+            identifier,
+            start_token,
+            end_token,
+            user_mark_id
+         ]
+        )?;
+
+        let block_range_id = self.userdata_db.last_insert_rowid();
+
+        debug!(target: TARGET, "BlockRange inserted to userdata database for ID {}!", block_range_id);
+
+        Ok(block_range_id)
     }
 }

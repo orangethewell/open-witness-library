@@ -1,6 +1,7 @@
 pub mod commands;
 pub mod handlers;
 pub mod publib;
+pub mod userdata;
 pub mod utils;
 
 use commands::catalogue::CatalogManager;

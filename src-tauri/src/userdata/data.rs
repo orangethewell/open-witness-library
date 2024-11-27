@@ -1,8 +1,8 @@
-use std::{
-    path::PathBuf,
-};
+use std::path::PathBuf;
 use colored::Colorize;
-use rusqlite::Connection;
+use rusqlite::{params, Connection};
+
+use super::tables::Location;
 
 const TARGET: &'static str = "userdata";
 
@@ -283,5 +283,130 @@ impl UserData {
             data_path: location,
             userdata_db: db
         })
+    }
+
+    pub fn get_locations(
+        &self,
+    ) -> Result<Vec<Location>, Box<dyn std::error::Error>> {
+        let mut stmt = self.userdata_db.prepare(
+            "SELECT 
+                LocationId,
+                BookNumber,
+                ChapterNumber,
+                DocumentId,
+                Track,
+                IssueTagNumber,
+                KeySymbol,
+                MepsLanguage,
+                Type,
+                Title
+        FROM PublicationViewItemDocument",
+        )?;
+        let mut rows = stmt.query([])?;
+
+        let mut locations = vec![];
+
+        while let Some(row) = rows.next()? {
+            let location = Location {
+                id: row.get(0)?,
+                book_number: row.get(1)?,
+                chapter_number: row.get(2)?,
+                document_id: row.get(3)?,
+                track: row.get(4)?,
+                issue_tag_number: row.get(5)?,
+                key_symbol: row.get(6)?,
+                meps_language: row.get(7)?,
+                type_id: row.get(8)?,
+                title: row.get(9)?,
+            };
+
+            locations.push(location);
+        }
+
+        Ok(locations)
+    }
+
+    pub fn get_location_by_document_id(
+        &self,
+        document_id: i32,
+    ) -> Result<Option<Location>, Box<dyn std::error::Error>> {
+        let mut stmt = self.userdata_db.prepare(
+            "SELECT 
+                LocationId,
+                BookNumber,
+                ChapterNumber,
+                DocumentId,
+                Track,
+                IssueTagNumber,
+                KeySymbol,
+                MepsLanguage,
+                Type,
+                Title
+        FROM Location WHERE DocumentId=?1",
+        )?;
+        let mut rows = stmt.query([document_id])?;
+
+        if let Some(row) = rows.next()? {
+            let location = Location {
+                id: row.get(0)?,
+                book_number: row.get(1)?,
+                chapter_number: row.get(2)?,
+                document_id: row.get(3)?,
+                track: row.get(4)?,
+                issue_tag_number: row.get(5)?,
+                key_symbol: row.get(6)?,
+                meps_language: row.get(7)?,
+                type_id: row.get(8)?,
+                title: row.get(9)?,
+            };
+
+            return Ok(Some(location))
+        }
+
+        Ok(None)
+    }
+
+    pub fn insert_location(
+        &self,
+        book_number: Option<i32>,
+        chapter_number: Option<i32>,
+        document_id: i32,
+        track: Option<i32>,
+        issue_tag_number: i32,
+        key_symbol: String,
+        meps_language: i32,
+        type_id: i32,
+        title: String,
+    ) -> Result<i64, Box<dyn std::error::Error>> {
+        self.userdata_db.execute(
+            "INSERT INTO Location (
+                BookNumber,
+                ChapterNumber,
+                DocumentId,
+                Track,
+                IssueTagNumber,
+                KeySymbol,
+                MepsLanguage,
+                Type,
+                Title
+        ) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9)",
+         params![
+            book_number,
+            chapter_number,
+            document_id,
+            track,
+            issue_tag_number,
+            key_symbol,
+            meps_language,
+            type_id,
+            title,
+         ]
+        )?;
+
+        let location_id = self.userdata_db.last_insert_rowid();
+
+        debug!(target: TARGET, "Location inserted to userdata database for ID {}!", location_id);
+
+        Ok(location_id)
     }
 }

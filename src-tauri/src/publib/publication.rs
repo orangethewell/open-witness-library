@@ -643,6 +643,225 @@ impl Publication {
         Ok(document)
     }
 
+    pub fn get_publication_meta(
+        &mut self,
+    ) -> Result<Option<PublicationMeta>, Box<dyn std::error::Error>> {
+        let mut fallback = false;
+        let mut stmt = match self.db.prepare(
+            "SELECT
+            PublicationId,
+            VersionNumber,
+            Type,
+            Title,
+            TitleRich,
+            RootSymbol,
+            RootYear,
+            RootMepsLanguageIndex,
+            ShortTitle,
+            DisplayTitle,
+            DisplayTitleRich,
+            ReferenceTitle,
+            ReferenceTitleRich,
+            UndatedReferenceTitle,
+            UndatedReferenceTitleRich,
+            Symbol,
+            UndatedSymbol,
+            UniqueSymbol,
+            EnglishSymbol,
+            UniqueEnglishSymbol,
+            IssueTagNumber,
+            IssueNumber,
+            Variation,
+            Year,
+            VolumeNumber,
+            MepsLanguageIndex,
+            PublicationType,
+            PublicationCategorySymbol,
+            BibleVersionForCitations,
+            HasPublicationChapterNumbers,
+            HasPublicationSectionNumbers,
+            FirstDatedTextDateOffset,
+            LastDatedTextDateOffset,
+            MepsBuildNumber
+        FROM Publication",
+        ) {
+            Ok(stmt) => stmt,
+            Err(_err) => {
+                fallback = true;
+                info!(
+                    target: TARGET,
+                    "Falling back to deprecated Publication table."
+                );
+                self.db.prepare(
+                    "SELECT
+                            PublicationId,
+                            VersionNumber,
+                            Type,
+                            Title,
+                            RootSymbol,
+                            RootYear,
+                            RootMepsLanguageIndex,
+                            ShortTitle,
+                            DisplayTitle,
+                            ReferenceTitle,
+                            UndatedReferenceTitle,
+                            Symbol,
+                            UndatedSymbol,
+                            UniqueSymbol,
+                            EnglishSymbol,
+                            UniqueEnglishSymbol,
+                            IssueTagNumber,
+                            IssueNumber,
+                            Variation,
+                            Year,
+                            VolumeNumber,
+                            MepsLanguageIndex,
+                            PublicationType,
+                            PublicationCategorySymbol,
+                            BibleVersionForCitations,
+                            HasPublicationChapterNumbers,
+                            HasPublicationSectionNumbers,
+                            FirstDatedTextDateOffset,
+                            LastDatedTextDateOffset,
+                        FROM Publication",
+                )?
+            }
+        };
+        let mut rows = stmt.query([])?;
+
+        let mut publication = None;
+
+        if let Some(row) = rows.next()? {
+            publication = Some(PublicationMeta {
+                id: row.get(0)?,
+                version_number: row.get(1)?,
+                type_id: row.get(2)?,
+                title: row.get(3)?,
+                title_rich: match fallback {
+                    false => row.get(4)?,
+                    true => None,
+                },
+                root_symbol: match fallback {
+                    false => row.get(5)?,
+                    true => row.get(4)?,
+                },
+                root_year: match fallback {
+                    false => row.get(6)?,
+                    true => row.get(5)?,
+                },
+                root_meps_language_index: match fallback {
+                    false => row.get(7)?,
+                    true => row.get(6)?,
+                },
+                short_title: match fallback {
+                    false => row.get(8)?,
+                    true => row.get(7)?,
+                },
+                short_title_rich: match fallback {
+                    false => row.get(9)?,
+                    true => None,
+                },
+                display_title: match fallback {
+                    false => row.get(10)?,
+                    true => row.get(8)?,
+                },
+                display_title_rich: match fallback {
+                    false => row.get(11)?,
+                    true => None,
+                },
+                reference_title: match fallback {
+                    false => row.get(12)?,
+                    true => row.get(9)?,
+                },
+                reference_title_rich: match fallback {
+                    false => row.get(13)?,
+                    true => None,
+                },
+                undated_reference_title: match fallback {
+                    false => row.get(14)?,
+                    true => row.get(10)?,
+                },
+                undated_reference_title_rich: match fallback {
+                    false => row.get(15)?,
+                    true => None,
+                },
+                symbol: match fallback {
+                    false => row.get(16)?,
+                    true => row.get(11)?,
+                },
+                undated_symbol: match fallback {
+                    false => row.get(17)?,
+                    true => row.get(12)?,
+                },
+                unique_symbol: match fallback {
+                    false => row.get(18)?,
+                    true => row.get(13)?,
+                },
+                english_symbol: match fallback {
+                    false => row.get(19)?,
+                    true => row.get(14)?,
+                },
+                unique_english_symbol: match fallback {
+                    false => row.get(20)?,
+                    true => row.get(15)?,
+                },
+                issue_tag_number: match fallback {
+                    false => row.get(21)?,
+                    true => row.get(16)?,
+                },
+                variation: match fallback {
+                    false => row.get(22)?,
+                    true => row.get(17)?,
+                },
+                year: match fallback {
+                    false => row.get(23)?,
+                    true => row.get(18)?,
+                },
+                volume_number: match fallback {
+                    false => row.get(24)?,
+                    true => row.get(19)?,
+                },
+                meps_language_index: match fallback {
+                    false => row.get(24)?,
+                    true => row.get(20)?,
+                },
+                publication_type: match fallback {
+                    false => row.get(25)?,
+                    true => row.get(21)?,
+                },
+                publication_category_symbol: match fallback {
+                    false => row.get(26)?,
+                    true => row.get(22)?,
+                },
+                bible_version_for_citations: match fallback {
+                    false => row.get(27)?,
+                    true => row.get(23)?,
+                },
+                has_publication_chapter_numbers: match fallback {
+                    false => row.get(28)?,
+                    true => row.get(24)?,
+                },
+                has_publication_section_numbers: match fallback {
+                    false => row.get(29)?,
+                    true => row.get(25)?,
+                },
+                first_dated_text_date_offset: match fallback {
+                    false => row.get(30)?,
+                    true => row.get(26)?,
+                },
+                last_dated_text_date_offset: match fallback {
+                    false => row.get(31)?,
+                    true => row.get(27)?,
+                },
+                meps_build_number: match fallback {
+                    false => row.get(32)?,
+                    true => 0,
+                },
+            });
+        }
+        Ok(publication)
+    }
+
     pub fn get_dated_texts(&mut self) -> Result<Vec<DatedText>, Box<dyn std::error::Error>> {
         let mut fallback = false;
         let mut stmt = match self.db.prepare(

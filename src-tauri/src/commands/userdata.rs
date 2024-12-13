@@ -14,15 +14,35 @@ pub struct UserDataManager {
 // userdata manager and catalog manager for MEPS
 // id retrieving.
 #[tauri::command]
-pub fn userdata_add_user_mark(
+pub async fn userdata_add_user_mark(
     catalog_manager: tauri::State<'_, CatalogManager>,
     manager: tauri::State<'_, UserDataManager>,
     document_id: i32,
     paragraph_identifier: i32,
     start_token: i32,
     end_token: i32,
-) {
+) -> Result<(), ()> {
+    let mut catalog = catalog_manager.catalog.lock().await;
+    let mut userdata = manager.user_data.lock().await;
 
+    let document_meps: i32;
+    let issue_tag_number: String;
+
+    if let Some(publication) = catalog.get_current_publication() {
+        if let Ok(Some(document)) = publication.get_document_by_id(document_id) {
+            document_meps = document.meps_document_id;
+        } else {
+            return Err(());
+        }
+
+        if let Ok(Some(publication_meta)) = publication.get_publication_meta() {
+            issue_tag_number = publication_meta.issue_tag_number;
+        } else {
+            return Err(());
+        }
+    }
+
+    Ok(())
 }
 
 #[tauri::command]

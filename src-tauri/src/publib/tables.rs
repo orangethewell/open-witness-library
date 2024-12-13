@@ -472,37 +472,40 @@ pub struct ParagraphCommentaryMap {
 }
 
 pub struct PublicationMeta {
-    id: i32,
-
-    version_number: i32,
-    type_id: i32,
-
-    title: String,
-    title_rich: Option<String>,
-
-    root_symbol: String,
-    root_year: i32,
-    root_meps_language_index: i32,
-
-    short_title: String,
-    short_title_rich: Option<String>,
-
-    display_title: String,
-    display_title_rich: Option<String>,
-
-    reference_title: String,
-    reference_title_rich: Option<String>,
-
-    undated_reference_title: String,
-    undated_reference_title_rich: Option<String>,
-
-    symbol: String,
-    undated_symbol: String,
-    unique_symbol: String,
-    english_symbol: String,
-    unique_english_symbol: String,
-
-    issue_tag_number: String,
+    pub id: i32,
+    pub version_number: i32,
+    pub type_id: i32,
+    pub title: String,
+    pub title_rich: Option<String>,
+    pub root_symbol: String,
+    pub root_year: i32,
+    pub root_meps_language_index: i32,
+    pub short_title: String,
+    pub short_title_rich: Option<String>,
+    pub display_title: String,
+    pub display_title_rich: Option<String>,
+    pub reference_title: String,
+    pub reference_title_rich: Option<String>,
+    pub undated_reference_title: String,
+    pub undated_reference_title_rich: Option<String>,
+    pub symbol: String,
+    pub undated_symbol: String,
+    pub unique_symbol: String,
+    pub english_symbol: String,
+    pub unique_english_symbol: String,
+    pub issue_tag_number: String,
+    pub variation: String,
+    pub year: i32,
+    pub volume_number: i32,
+    pub meps_language_index: i32,
+    pub publication_type: String,
+    pub publication_category_symbol: String,
+    pub bible_version_for_citations: String,
+    pub has_publication_chapter_numbers: bool,
+    pub has_publication_section_numbers: bool,
+    pub first_dated_text_date_offset: String,
+    pub last_dated_text_date_offset: String,
+    pub meps_build_number: i32,
 }
 
 pub struct PublicationAttribute {
